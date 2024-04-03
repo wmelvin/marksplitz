@@ -21,12 +21,12 @@ class AppOptions(NamedTuple):
     out_path: Path
     output_name: str
     images_subdir: str
+    css_path: Path
 
 
 def html_style() -> str:
     return dedent(
         """\
-        <style>
         body { font-family: sans-serif; }
         h1 { color: gray; text-align: center; }
         img {
@@ -66,7 +66,6 @@ def html_style() -> str:
             color: brown;
             text-decoration: none;
         }
-        </style>
         """
     )
 
@@ -79,7 +78,7 @@ def nav_link_div(div_id: str, target: str, anchor: str):
     return s
 
 
-def html_head(title: str, prevPage: str) -> str:
+def html_head(title: str, prevPage: str, css_link: str) -> str:
     s = dedent(
         f"""\
         <!DOCTYPE html>
@@ -89,7 +88,10 @@ def html_head(title: str, prevPage: str) -> str:
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         """
     )
-    s += html_style()
+    if css_link:
+        s += f"{css_link}\n"
+    else:
+        s += f"<style>\n{html_style()}</style>\n"
     s += '</head>\n<body>\n<div class="container">\n\n'
     s += nav_link_div("nav-prev", prevPage, "&larr;")
     s += '\n<div class="content">\n'
@@ -235,6 +237,17 @@ def get_args(arglist=None):
         "name in the output directory.",
     )
 
+    ap.add_argument(
+        "-c",
+        "--css-file",
+        dest="css_file",
+        help="Optional name of a CSS file to include in the same location as the HTML "
+        "output. If a CSS file is not specified, a default style is embedded in the "
+        "HTML output. If a CSS file is specified, the default style is not included."
+        "If the specified CSS file does not exist, it is created with the default "
+        "style.",
+    )
+
     return ap.parse_args(arglist)
 
 
@@ -269,11 +282,14 @@ def get_options(arglist=None) -> AppOptions:
 
     output_name = args.output_name if args.output_name else "page"
 
+    css_path = out_path / args.css_file if args.css_file else None
+
     return AppOptions(
         md_path=md_path,
         out_path=out_path,
         output_name=output_name,
         images_subdir=args.images_subdir,
+        css_path=css_path,
     )
 
 
@@ -311,11 +327,21 @@ def main(arglist=None):
         pages.append(t)
 
     if pages:
+        if opts.css_path:
+            if not opts.css_path.exists():
+                print(f"Writing '{opts.css_path}'")
+                opts.css_path.write_text(html_style())
+            css_link = (
+                f'<link rel="stylesheet" type="text/css" href="{opts.css_path.name}">'
+            )
+        else:
+            css_link = ""
+
         for num, text in enumerate(pages, start=1):
             filename, prevPage, nextPage = output_filenames(
                 opts.output_name, num, len(pages)
             )
-            html = html_head(f"Page {num}", prevPage)
+            html = html_head(f"Page {num}", prevPage, css_link)
             html += mistune.markdown(text)
             html += html_tail(prevPage, nextPage)
 

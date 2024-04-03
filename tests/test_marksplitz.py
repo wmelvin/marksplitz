@@ -110,3 +110,43 @@ def test_copy_images_subdir(tmp_path, images_option):
     assert (out_dir / "page-001.html").exists()
     assert (out_dir / "images").exists()
     assert (out_dir / "images" / "image.png").exists()
+
+
+@pytest.mark.parametrize("css_option", ["-c", "--css-file"])
+def test_css_file_option(tmp_path, css_option):
+    # Create a temporary directory with a Markdown file and a CSS file.
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n" "This is a test.\n")
+
+    # Create a temporary directory for the output.
+    out_dir = tmp_path / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir), css_option, "style.css"]
+    marksplitz.main(args)
+
+    html_file = out_dir / "page-001.html"
+    assert html_file.exists()
+
+    html_text = html_file.read_text()
+
+    # Check that the HTML file does not contain the <style> tag.
+    assert "<style>" not in html_text
+
+    # Check that the HTML file contains the <link> tag.
+    assert '<link rel="stylesheet" type="text/css" href="style.css">' in html_text
+
+    # A CSS file containing default style should be created.
+    css_file = out_dir / "style.css"
+    assert css_file.exists()
+
+    # Modify the CSS file to add a new style.
+    with css_file.open("a") as f:
+        f.write("\n.noclass { color: red; }\n")
+
+    # Run the main function again to check that the CSS file is not overwritten.
+    marksplitz.main(args)
+
+    # Check that the CSS file contains the added style.
+    text = css_file.read_text()
+    assert ".noclass { color: red; }" in text
