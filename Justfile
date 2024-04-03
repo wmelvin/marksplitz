@@ -10,6 +10,9 @@
 @check:
   ruff format --check
 
+# lint and check
+@checks: lint check
+
 # Remove dist and egg-info
 @clean:
   -rm dist/*

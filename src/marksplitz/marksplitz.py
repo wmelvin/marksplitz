@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -276,9 +277,23 @@ def get_options(arglist=None) -> AppOptions:
     )
 
 
+def copy_images_subdir(opts: AppOptions):
+    if opts.images_subdir:
+        src_path = opts.md_path.parent / opts.images_subdir
+        dst_path = opts.out_path / opts.images_subdir
+        dst_path.mkdir()
+        for src_file in src_path.iterdir():
+            if not src_file.is_file():
+                continue
+            dst_file = dst_path / src_file.name
+            print(f"Copy '{src_file}'\n  to '{dst_file}'")
+            shutil.copy2(src_file, dst_file)
+
+
 def main(arglist=None):
     opts = get_options(arglist)
 
+    print(f"\nReading '{opts.md_path}'")
     md = opts.md_path.read_text().splitlines(keepends=True)
 
     pages = []
@@ -295,14 +310,20 @@ def main(arglist=None):
     if t:
         pages.append(t)
 
-    for num, text in enumerate(pages, start=1):
-        filename, prevPage, nextPage = output_filenames(
-            opts.output_name, num, len(pages)
-        )
-        html = html_head(f"Page {num}", prevPage)
-        html += mistune.markdown(text)
-        html += html_tail(prevPage, nextPage)
-        (opts.out_path / filename).write_text(html)
+    if pages:
+        for num, text in enumerate(pages, start=1):
+            filename, prevPage, nextPage = output_filenames(
+                opts.output_name, num, len(pages)
+            )
+            html = html_head(f"Page {num}", prevPage)
+            html += mistune.markdown(text)
+            html += html_tail(prevPage, nextPage)
+
+            html_file = opts.out_path / filename
+            print(f"Writing '{html_file}'")
+            html_file.write_text(html)
+
+        copy_images_subdir(opts)
 
 
 if __name__ == "__main__":

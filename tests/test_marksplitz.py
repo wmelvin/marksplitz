@@ -86,3 +86,27 @@ def test_output_dir_option(tmp_path, outdir_option):
     marksplitz.main(args)
 
     assert (out_dir / "page-001.html").exists()
+
+
+@pytest.mark.parametrize("images_option", ["-i", "--images-subdir"])
+def test_copy_images_subdir(tmp_path, images_option):
+    # Create a temporary directory with a Markdown file and an images subdirectory.
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n" "This is a test.\n" "![Image](images/image.png)\n")
+
+    images_dir = tmp_path / "images"
+    images_dir.mkdir()
+    (images_dir / "image.png").write_text("I am a bad PNG!")
+
+    # Create a temporary directory for the output.
+    out_dir = tmp_path / "Output"
+    out_dir.mkdir()
+
+    # Run the main function passing the Markdown file and output directory.
+    args = [str(md_file), "-o", str(out_dir), images_option, "images"]
+    marksplitz.main(args)
+
+    # Check that the output directory contains the expected files.
+    assert (out_dir / "page-001.html").exists()
+    assert (out_dir / "images").exists()
+    assert (out_dir / "images" / "image.png").exists()
