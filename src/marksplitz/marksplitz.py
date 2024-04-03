@@ -193,7 +193,7 @@ def output_filenames(num: int, n_pages: int) -> tuple[str, str, str]:
     corresponding filename is an empty string. The filenames are returned as a
     tuple of strings.
     """
-    base_filename = "output"
+    base_filename = "page"
     prev_filename = "" if num == 1 else f"{base_filename}-{num - 1:03}.html"
     next_filename = "" if num == n_pages else f"{base_filename}-{num + 1:03}.html"
     filename = f"{base_filename}-{num:03}.html"
@@ -247,15 +247,22 @@ def get_options(arglist=None) -> AppOptions:
 
     if args.output_dir:
         out_path = Path(args.output_dir)
+        # If an output directory is specified, it must exist.
         if not out_path.exists():
             sys.stderr.write(f"\nDirectory not found: {out_path}\n")
             sys.exit(1)
     else:
-        args.output_dir = md_path.parent / "Output"
+        dir_name = md_path.parent / f"Pages_{run_dt:%Y%m%d_%H%M%S}"
+        out_path = md_path.parent / dir_name
+        # Default directory should not already exist.
+        if out_path.exists():
+            sys.stderr.write(f"\nDirectory already exists: {out_path}\n")
+            sys.exit(1)
+        out_path.mkdir()
 
     return AppOptions(
         md_path=md_path,
-        out_path=Path(args.output_dir),
+        out_path=out_path,
         output_name=args.output_name,
         images_subdir=args.images_subdir,
     )
