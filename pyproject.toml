@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marksplitz"
+dynamic = ["version"]
+description = 'Command-line utility to split a Markdown file into linked static web pages.'
+requires-python = ">=3.8"
+
+# TODO: readme = "README.md"
+# TODO: license = {file = "LICENSE"}
+
+keywords = [ "markdown", "converter", "html", "slideshow"]
+
+authors = [
+  { name = "Bill Melvin", email = "bill@billmelvin.com" },
+]
+
+dependencies = [ "mistune" ]
+
+[project.scripts]
+marksplitz = "marksplitz.marksplitz:main"
+
+[tool.setuptools.dynamic]
+version = {attr = "marksplitz.marksplitz.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["marksplitz*"]
+namespaces = false
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+extend-exclude = ["suggested_code.py"]
+
+[tool.ruff.lint]
+select = [
+    "A",    # flake8-builtins
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "E",    # pycodestyle errors
+    "F",    # Pyfakes
+    "FA",   # flake8-future-annotations
+    "I",    # isort
+    "ISC",  # flake8-implicit-str-concat
+    "PERF", # Perflint
+    "PL",   # Pylint
+    "PTH",  # flake8-use-pathlib
+    "PYI",  # flake8-pyi
+    "RET",  # flake8-return
+    "S",    # flake8-bandit
+    "SIM",  # flake8-simplify
+    "W"     # Warning
+]
+ignore = ["ISC001"]
+# extend-select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"**/test_*.py" = [
+    "S101",    # assert
+    "PLR2004", # magic number
+]
