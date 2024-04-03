@@ -187,13 +187,14 @@ def html_tail(prevPage: str, nextPage: str) -> str:
     return s
 
 
-def output_filenames(num: int, n_pages: int) -> tuple[str, str, str]:
+def output_filenames(
+    base_filename: str, num: int, n_pages: int
+) -> tuple[str, str, str]:
     """Return the filename of the current page and the filenames of the
     previous and next pages. If there is no previous or next page, the
     corresponding filename is an empty string. The filenames are returned as a
     tuple of strings.
     """
-    base_filename = "page"
     prev_filename = "" if num == 1 else f"{base_filename}-{num - 1:03}.html"
     next_filename = "" if num == n_pages else f"{base_filename}-{num + 1:03}.html"
     filename = f"{base_filename}-{num:03}.html"
@@ -222,7 +223,6 @@ def get_args(arglist=None):
         "--output-name",
         dest="output_name",
         help="Base name for the output HTML files.",
-        default="output",
     )
 
     ap.add_argument(
@@ -260,10 +260,18 @@ def get_options(arglist=None) -> AppOptions:
             sys.exit(1)
         out_path.mkdir()
 
+    if args.images_subdir:
+        images_subdir = md_path.parent / args.images_subdir
+        if not images_subdir.exists():
+            sys.stderr.write(f"\nDirectory not found: {images_subdir}\n")
+            sys.exit(1)
+
+    output_name = args.output_name if args.output_name else "page"
+
     return AppOptions(
         md_path=md_path,
         out_path=out_path,
-        output_name=args.output_name,
+        output_name=output_name,
         images_subdir=args.images_subdir,
     )
 
@@ -288,7 +296,9 @@ def main(arglist=None):
         pages.append(t)
 
     for num, text in enumerate(pages, start=1):
-        filename, prevPage, nextPage = output_filenames(num, len(pages))
+        filename, prevPage, nextPage = output_filenames(
+            opts.output_name, num, len(pages)
+        )
         html = html_head(f"Page {num}", prevPage)
         html += mistune.markdown(text)
         html += html_tail(prevPage, nextPage)

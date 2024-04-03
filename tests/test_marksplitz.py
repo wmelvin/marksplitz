@@ -1,3 +1,4 @@
+import pytest
 from marksplitz import marksplitz
 
 
@@ -57,3 +58,31 @@ def test_creates_default_output_directory(tmp_path):
 
     # Check that the output directory contains the expected file.
     assert (dirs[0] / "page-001.html").exists()
+
+
+@pytest.mark.parametrize("name_option", ["-n", "--output-name"])
+def test_output_name_option(tmp_path, name_option):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\nThis is a test.\n")
+
+    out_dir = tmp_path / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir), name_option, "myname"]
+    marksplitz.main(args)
+
+    assert (out_dir / "myname-001.html").exists()
+
+
+@pytest.mark.parametrize("outdir_option", ["-o", "--output-dir"])
+def test_output_dir_option(tmp_path, outdir_option):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\nThis is a test.\n")
+
+    out_dir = tmp_path / "OutputPages"
+    out_dir.mkdir()
+
+    args = [str(md_file), outdir_option, str(out_dir)]
+    marksplitz.main(args)
+
+    assert (out_dir / "page-001.html").exists()
