@@ -78,7 +78,7 @@ def nav_link_div(div_id: str, target: str, anchor: str):
     return s
 
 
-def html_head(title: str, prevPage: str, css_link: str) -> str:
+def html_head(title: str, prevPage: str, css_link: str, add_classes: str) -> str:
     s = dedent(
         f"""\
         <!DOCTYPE html>
@@ -94,7 +94,10 @@ def html_head(title: str, prevPage: str, css_link: str) -> str:
         s += f"<style>\n{html_style()}</style>\n"
     s += '</head>\n<body>\n<div class="container">\n\n'
     s += nav_link_div("nav-prev", prevPage, "&larr;")
-    s += '\n<div class="content">\n'
+    if add_classes:
+        s += f'<div class="content {add_classes}">\n'
+    else:
+        s += '\n<div class="content">\n'
     return s
 
 
@@ -311,6 +314,24 @@ def copy_images_subdir(opts: AppOptions):
             shutil.copy2(src_file, dst_file)
 
 
+def extract_class_comments(text) -> tuple[str, str]:
+    """Return a tuple of the text with class comments removed and the
+    classes extracted from the comments. The text is returned as a string.
+    The classes are returned as a string.
+    """
+    classes = ""
+    out_lines = []
+    lines = text.splitlines(keepends=True)
+    for line in lines:
+        s = line.strip()
+        if s.startswith("<!-- class: "):
+            classes = s[12:-3].strip()
+        else:
+            out_lines.append(line)
+
+    return "".join(out_lines), classes
+
+
 def main(arglist=None) -> int:
     opts = get_options(arglist)
 
@@ -343,13 +364,15 @@ def main(arglist=None) -> int:
             css_link = ""
 
         for num, text in enumerate(pages, start=1):
+            md, add_classes = extract_class_comments(text)
+
             filename, prevPage, nextPage = output_filenames(
                 opts.output_name, num, len(pages)
             )
 
-            html = html_head(f"Page {num}", prevPage, css_link)
+            html = html_head(f"Page {num}", prevPage, css_link, add_classes)
 
-            html += mistune.html(text)
+            html += mistune.html(md)
 
             html += html_tail(prevPage, nextPage)
 

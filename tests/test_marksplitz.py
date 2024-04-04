@@ -225,3 +225,63 @@ def test_css_file_option(tmp_path, css_option):
     # Check that the CSS file contains the added style.
     text = css_file.read_text()
     assert ".noclass { color: red; }" in text
+
+
+def test_class_comments(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text(
+        dedent(
+            """
+            # Test
+
+            ## Page 1
+
+            This is a test.
+
+            ---
+
+            ## Page 2
+
+            A bulleted list:
+
+            - Item A
+            - Item B
+            - Item C
+
+            <!-- class: class-1 -->
+
+            ---
+
+            <!-- class: class-1 class-2 -->
+
+            ## Page 3
+
+            A numbered list:
+
+            1. Item 1
+            2. Item 2
+            3. Item 3
+
+            """
+        )
+    )
+
+    out_dir = tmp_path / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir)]
+    marksplitz.main(args)
+
+    # assert (out_dir / "page-001.html").exists()
+    assert (out_dir / "page-002.html").exists()
+    assert (out_dir / "page-003.html").exists()
+
+    # text1 = (out_dir / "page-001.html").read_text()
+
+    text2 = (out_dir / "page-002.html").read_text()
+    assert 'class="content class-1"' in text2
+    assert "<!-- class:" not in text2
+
+    text3 = (out_dir / "page-003.html").read_text()
+    assert 'class="content class-1 class-2"' in text3
+    assert "<!-- class:" not in text3
