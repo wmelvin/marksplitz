@@ -35,6 +35,12 @@ def html_style() -> str:
             height: auto;
             width: 90%;
         }
+        blockquote {
+            border: 1px solid #b0e0e6;
+            border-radius: 6px;
+            color: darkslategray;
+            padding: 0px 4px;
+        }
         code {
             background-color: #eee;
             padding-left: 0.3rem;
@@ -44,7 +50,7 @@ def html_style() -> str:
         .container {
             margin: 0.3rem;
             display: flex;
-            align-items: center;
+            /* align-items: center; */
             justify-content: center;
         }
         .content {
@@ -52,7 +58,13 @@ def html_style() -> str:
             padding: 2rem;
             width: 800px;
         }
-        .nav-link { width: 3rem; }
+        .text-center {
+            text-align: center;
+        }
+        .nav-link {
+            padding-top: 2rem;
+            width: 3rem;
+        }
         .nav-link a {
             border: 1px solid silver;
             border-radius: 5px;
