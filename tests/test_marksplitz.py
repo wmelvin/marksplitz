@@ -166,6 +166,27 @@ def test_copy_images_subdir(tmp_path, images_option):
     assert (out_dir / "images" / "image.png").exists()
 
 
+def test_copy_images_with_existing_file(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Test\n" "This is a test.\n" "![Image](images/image.png)\n")
+
+    images_dir = tmp_path / "images"
+    images_dir.mkdir()
+    (images_dir / "image.png").write_text("I am a bad PNG!")
+
+    out_dir = tmp_path / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir), "-i", "images"]
+    marksplitz.main(args)
+
+    assert (out_dir / "images" / "image.png").exists()
+
+    # Should succeed when output directory and image file already exist.
+    result = marksplitz.main(args)
+    assert result == 0
+
+
 @pytest.mark.parametrize("css_option", ["-c", "--css-file"])
 def test_css_file_option(tmp_path, css_option):
     # Create a temporary directory with a Markdown file and a CSS file.

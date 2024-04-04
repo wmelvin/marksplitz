@@ -294,10 +294,15 @@ def get_options(arglist=None) -> AppOptions:
 
 
 def copy_images_subdir(opts: AppOptions):
+    """Copy the source images subdirectory, if one is specified,
+    to the output directory. Existing files in the output
+    directory are overwritten.
+    """
     if opts.images_subdir:
         src_path = opts.md_path.parent / opts.images_subdir
         dst_path = opts.out_path / opts.images_subdir
-        dst_path.mkdir()
+        if not dst_path.exists():
+            dst_path.mkdir()
         for src_file in src_path.iterdir():
             if not src_file.is_file():
                 continue
@@ -306,7 +311,7 @@ def copy_images_subdir(opts: AppOptions):
             shutil.copy2(src_file, dst_file)
 
 
-def main(arglist=None):
+def main(arglist=None) -> int:
     opts = get_options(arglist)
 
     print(f"\nReading '{opts.md_path}'")
@@ -353,6 +358,8 @@ def main(arglist=None):
             html_file.write_text(html)
 
         copy_images_subdir(opts)
+
+    return 0
 
 
 if __name__ == "__main__":
