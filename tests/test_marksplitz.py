@@ -1,3 +1,6 @@
+from textwrap import dedent
+
+import mistune
 import pytest
 from marksplitz import marksplitz
 
@@ -6,14 +9,59 @@ def test_split_markdown_file(tmp_path):
     # Create a temporary directory with a Markdown file.
     md_file = tmp_path / "test.md"
     md_file.write_text(
-        "# Test\n"
-        "This is a test.\n"
-        "---\n"
-        "## Section 1\n"
-        "This is section 1.\n"
-        "---\n"
-        "## Section 2\n"
-        "This is section 2.\n"
+        dedent(
+            """
+            # Test
+
+            ___
+
+            ## Page 1
+
+            This is a test.
+
+            ---
+
+            ## Page 2
+
+            This is section 2.
+
+            A bulleted list:
+
+            - Item A
+            - Item B
+            - Item C
+
+            > A block quote
+
+            A numbered list:
+
+            1. Item 1
+            2. Item 2
+            3. Item 3
+
+            ---
+
+            ## Page 3
+
+            This is section 3.
+
+            Some inline `code`.
+
+            A block of code:
+
+            ``` python
+            from pathlib import Path
+
+            print(Path.cwd())
+            ```
+
+            <h4>HTML Element (h4)</h4>
+
+            Sup: <sup>superscript</sup>
+
+            Sub: <sub>subscript</sub>
+            """
+        )
     )
 
     # Create a temporary directory for the output.
@@ -35,12 +83,18 @@ def test_split_markdown_file(tmp_path):
     assert "<p>This is a test.</p>" in text1
 
     text2 = (out_dir / "page-002.html").read_text()
-    assert "<h2>Section 1</h2>" in text2
-    assert "<p>This is section 1.</p>" in text2
+    assert "<h2>Page 2</h2>" in text2
+    assert "<p>This is section 2.</p>" in text2
 
     text3 = (out_dir / "page-003.html").read_text()
-    assert "<h2>Section 2</h2>" in text3
-    assert "<p>This is section 2.</p>" in text3
+    assert "<h2>Page 3</h2>" in text3
+    assert "<p>This is section 3.</p>" in text3
+
+    # Write text files to manually compare rendering options
+    # in tmp location.
+    md = md_file.read_text()
+    (tmp_path / "mistune.html.txt").write_text(mistune.html(md))
+    (tmp_path / "mistune.markdown.txt").write_text(mistune.markdown(md))
 
 
 def test_creates_default_output_directory(tmp_path):

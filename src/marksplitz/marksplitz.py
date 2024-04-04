@@ -10,7 +10,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev1"
+__version__ = "0.1.dev2"
 
 
 run_dt = datetime.now()
@@ -341,8 +341,11 @@ def main(arglist=None):
             filename, prevPage, nextPage = output_filenames(
                 opts.output_name, num, len(pages)
             )
+
             html = html_head(f"Page {num}", prevPage, css_link)
-            html += mistune.markdown(text)
+
+            html += mistune.html(text)
+
             html += html_tail(prevPage, nextPage)
 
             html_file = opts.out_path / filename
