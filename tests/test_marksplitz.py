@@ -309,3 +309,23 @@ def test_creates_index_html(tmp_markdown_file):
     assert '<a href="page-001.html">Test</a>' in index_text
     assert '<a href="page-002.html">Page 2</a>' in index_text
     assert '<a href="page-003.html">Page 3</a>' in index_text
+
+
+def test_title_comments(tmp_markdown_file):
+    md_file = tmp_markdown_file
+
+    md_file.write_text(md_file.read_text() + "\n<!-- title: This Title -->\n")
+
+    out_dir = md_file.parent / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir)]
+    marksplitz.main(args)
+
+    index_file = out_dir / "index.html"
+    assert index_file.exists()
+
+    index_text = index_file.read_text()
+    assert '<a href="page-001.html">Test</a>' in index_text
+    assert '<a href="page-002.html">Page 2</a>' in index_text
+    assert '<a href="page-003.html">This Title</a>' in index_text

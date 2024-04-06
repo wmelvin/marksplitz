@@ -28,13 +28,22 @@ def html_style() -> str:
     return dedent(
         """\
         body { font-family: sans-serif; }
-        h1 { color: gray; text-align: center; }
+        h1 {
+            color: #004578;
+            text-align: center;
+        }
+        h2 {
+            color: #002452;
+            margin-top: 2rem;
+        }
+        h3 { color: #001541; }
         img {
             border: 1px solid #dde;
             border-radius: 6px;
             height: auto;
             width: 90%;
         }
+        li { margin-top: 0.8rem; }
         blockquote {
             border: 1px solid #b0e0e6;
             border-radius: 6px;
@@ -50,17 +59,16 @@ def html_style() -> str:
         .container {
             margin: 0.3rem;
             display: flex;
-            /* align-items: center; */
+            align-items: center;
             justify-content: center;
+            min-height: 600px;
         }
         .content {
             border: 1px solid silver;
             padding: 2rem;
             width: 800px;
         }
-        .text-center {
-            text-align: center;
-        }
+        .text-center { text-align: center; }
         .nav-link {
             padding-top: 2rem;
             width: 3rem;
@@ -386,13 +394,42 @@ def copy_images_subdir(opts: AppOptions):
 
 
 def get_page_title(num: int, text: str) -> str:
-    """Return the first heading in the text as the page title."""
+    """Return the first heading in the text as the page title.
+    If there is no heading, return a default title.
+    """
     lines = text.splitlines()
     for line in lines:
         s = line.strip()
         if s.startswith("#"):
             return s.split(" ", 1)[1]
     return f"Page {num}"
+
+
+def extract_title_comments(num: int, text: str) -> tuple[str, str]:
+    """Return a tuple of the text with title comments removed and the title
+    extracted from the comments. The text is returned as a string.
+    The title is returned as a string.
+
+    There should only be one title comment in the text. If there is more than
+    one, the last one is used.
+    """
+    title = ""
+
+    # Look for, and remove, a title comment.
+    out_lines = []
+    lines = text.splitlines(keepends=True)
+    for line in lines:
+        s = line.strip()
+        if s.startswith("<!-- title: "):
+            title = s[12:-3].strip()
+        else:
+            out_lines.append(line)
+
+    # If there was no title comment, use the first heading as the title.
+    if not title:
+        title = get_page_title(num, text)
+
+    return "".join(out_lines), title
 
 
 def extract_class_comments(text) -> tuple[str, str]:
@@ -447,8 +484,9 @@ def main(arglist=None) -> int:
         index_items = []
 
         for num, text in enumerate(pages, start=1):
-            pg_title = get_page_title(num, text)
-            md, add_classes = extract_class_comments(text)
+            md, pg_title = extract_title_comments(num, text)
+
+            md, add_classes = extract_class_comments(md)
 
             filename, prevPage, nextPage = output_filenames(
                 opts.output_name, num, len(pages)
@@ -456,7 +494,7 @@ def main(arglist=None) -> int:
 
             index_items.append((filename, pg_title))
 
-            html = html_head(f"Page {num}", prevPage, css_link, add_classes)
+            html = html_head(f"{num}. {pg_title}", prevPage, css_link, add_classes)
 
             html += mistune.html(md)
 
