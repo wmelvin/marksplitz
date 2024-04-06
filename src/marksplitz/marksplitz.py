@@ -10,7 +10,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev2"
+__version__ = "0.1.dev3"
 
 
 run_dt = datetime.now()
@@ -205,6 +205,65 @@ def html_tail(prevPage: str, nextPage: str) -> str:
     return s
 
 
+def write_index(out_path: Path, items: list[tuple[str, str]]):
+    """Write an index file with links to the pages. The index file is named
+    'index.html' and is written to the output directory.
+    The parameter 'items' is a list of tuples containing the filename and title
+    of each page.
+    """
+    index_file = out_path / "index.html"
+    print(f"Writing '{index_file}'")
+    with index_file.open("w") as f:
+        f.write(
+            dedent(
+                """\
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                  <title>Index</title>
+                  <style>
+                    body { font-family: sans-serif; }
+                    li {
+                        border: 1px solid #dde;
+                        border-radius: 5px;
+                        margin: 0.3rem;
+                        padding: 0.3rem;
+                    }
+                    .container {
+                        display: flex;
+                        justify-content: center;
+                    }
+                    .content {
+                        max-width: 900px;
+                    }
+                  </style>
+                  <base target="_blank">
+                </head>
+                <body>
+                <div class="container">
+                <div class="content">
+                <h1>Index of Pages</h1>
+                <ol>
+                """
+            )
+        )
+
+        for filename, title in items:
+            f.write(f'  <li><a href="{filename}">{title}</a></li>\n')
+
+        f.write(
+            dedent(
+                """\
+                </ol>
+                </div>
+                </div>
+                </body>
+                </html>
+                """
+            )
+        )
+
+
 def output_filenames(
     base_filename: str, num: int, n_pages: int
 ) -> tuple[str, str, str]:
@@ -326,6 +385,16 @@ def copy_images_subdir(opts: AppOptions):
             shutil.copy2(src_file, dst_file)
 
 
+def get_page_title(num: int, text: str) -> str:
+    """Return the first heading in the text as the page title."""
+    lines = text.splitlines()
+    for line in lines:
+        s = line.strip()
+        if s.startswith("#"):
+            return s.split(" ", 1)[1]
+    return f"Page {num}"
+
+
 def extract_class_comments(text) -> tuple[str, str]:
     """Return a tuple of the text with class comments removed and the
     classes extracted from the comments. The text is returned as a string.
@@ -375,12 +444,17 @@ def main(arglist=None) -> int:
         else:
             css_link = ""
 
+        index_items = []
+
         for num, text in enumerate(pages, start=1):
+            pg_title = get_page_title(num, text)
             md, add_classes = extract_class_comments(text)
 
             filename, prevPage, nextPage = output_filenames(
                 opts.output_name, num, len(pages)
             )
+
+            index_items.append((filename, pg_title))
 
             html = html_head(f"Page {num}", prevPage, css_link, add_classes)
 
@@ -393,6 +467,8 @@ def main(arglist=None) -> int:
             html_file.write_text(html)
 
         copy_images_subdir(opts)
+
+        write_index(opts.out_path, index_items)
 
     return 0
 

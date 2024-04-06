@@ -1,3 +1,4 @@
+from pathlib import Path
 from textwrap import dedent
 
 import mistune
@@ -5,8 +6,8 @@ import pytest
 from marksplitz import marksplitz
 
 
-def test_split_markdown_file(tmp_path):
-    # Create a temporary directory with a Markdown file.
+@pytest.fixture
+def tmp_markdown_file(tmp_path) -> Path:
     md_file = tmp_path / "test.md"
     md_file.write_text(
         dedent(
@@ -63,9 +64,14 @@ def test_split_markdown_file(tmp_path):
             """
         )
     )
+    return md_file
+
+
+def test_split_markdown_file(tmp_markdown_file):
+    md_file = tmp_markdown_file
 
     # Create a temporary directory for the output.
-    out_dir = tmp_path / "Output"
+    out_dir = md_file.parent / "Output"
     out_dir.mkdir()
 
     # Run the main function passing the Markdown file and output directory.
@@ -93,8 +99,8 @@ def test_split_markdown_file(tmp_path):
     # Write text files to manually compare rendering options
     # in tmp location.
     md = md_file.read_text()
-    (tmp_path / "mistune.html.txt").write_text(mistune.html(md))
-    (tmp_path / "mistune.markdown.txt").write_text(mistune.markdown(md))
+    (md_file.parent / "mistune.html.txt").write_text(mistune.html(md))
+    (md_file.parent / "mistune.markdown.txt").write_text(mistune.markdown(md))
 
 
 def test_creates_default_output_directory(tmp_path):
@@ -285,3 +291,21 @@ def test_class_comments(tmp_path):
     text3 = (out_dir / "page-003.html").read_text()
     assert 'class="content class-1 class-2"' in text3
     assert "<!-- class:" not in text3
+
+
+def test_creates_index_html(tmp_markdown_file):
+    md_file = tmp_markdown_file
+
+    out_dir = md_file.parent / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir)]
+    marksplitz.main(args)
+
+    index_file = out_dir / "index.html"
+    assert index_file.exists()
+
+    index_text = index_file.read_text()
+    assert '<a href="page-001.html">Test</a>' in index_text
+    assert '<a href="page-002.html">Page 2</a>' in index_text
+    assert '<a href="page-003.html">Page 3</a>' in index_text
