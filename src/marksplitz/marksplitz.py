@@ -98,7 +98,24 @@ def nav_link_div(div_id: str, target: str, anchor: str):
     return s
 
 
-def html_head(title: str, prevPage: str, css_link: str, add_classes: str) -> str:
+def html_head(
+    title: str, pageNum: int, prevPage: str, css_link: str, add_classes: str
+) -> str:
+    """Return the head section of an HTML file as a string. The title is used
+    as the page title. The page number is used to set the 'id' attribute of
+    the 'content' div. If a CSS link is provided, it is included in the head
+    section. If no CSS link is provided, a default style is embedded in the
+    HTML output. If additional classes are provided, they are added to the
+    'content' div.
+
+    param title: The title of the page.
+    param pageNum: The page number.
+    param prevPage: The filename of the previous page.
+    param css_link: A link to a CSS file.
+    param add_classes: Additional classes to add to the content div.
+
+    return: The head section of an HTML file as a string.
+    """
     s = dedent(
         f"""\
         <!DOCTYPE html>
@@ -108,16 +125,22 @@ def html_head(title: str, prevPage: str, css_link: str, add_classes: str) -> str
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         """
     )
+
     if css_link:
         s += f"{css_link}\n"
     else:
         s += f"<style>\n{html_style()}</style>\n"
+
+    s += '<link rel="stylesheet" type="text/css" href="custom.css">\n'
+
     s += '</head>\n<body>\n<div class="container">\n\n'
+
     s += nav_link_div("nav-prev", prevPage, "&larr;")
-    if add_classes:
-        s += f'<div class="content {add_classes}">\n'
-    else:
-        s += '\n<div class="content">\n'
+
+    class_str = f"content {add_classes}" if add_classes else "content"
+
+    s += f'\n<div id="pg-{pageNum}" class="{class_str}">\n'
+
     return s
 
 
@@ -454,11 +477,12 @@ def main(arglist=None) -> int:
     opts = get_options(arglist)
 
     print(f"\nReading '{opts.md_path}'")
-    md = opts.md_path.read_text().splitlines(keepends=True)
+
+    src_md = opts.md_path.read_text().splitlines(keepends=True)
 
     pages = []
     t = ""
-    for line in md:
+    for line in src_md:
         s = line.strip()
         if s == "---":
             if t:
@@ -494,7 +518,7 @@ def main(arglist=None) -> int:
 
             index_items.append((filename, pg_title))
 
-            html = html_head(f"{num}. {pg_title}", prevPage, css_link, add_classes)
+            html = html_head(f"{num}. {pg_title}", num, prevPage, css_link, add_classes)
 
             html += mistune.html(md)
 
