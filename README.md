@@ -45,7 +45,7 @@ options:
 
 ### Project Tools
 
-- [uv](https://github.com/astral-sh/uv) - Environment management (in place of `pip`)
+- [uv](https://github.com/astral-sh/uv#readme) - Environment management (in place of `pip`)
 - [Ruff](https://docs.astral.sh/ruff/) - Linter and code formatter
 - [pytest](https://docs.pytest.org/en/stable/) - Testing framework
-- [Just](https://github.com/casey/just) - Command runner
+- [Just](https://github.com/casey/just#readme) - Command runner

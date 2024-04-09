@@ -1,3 +1,5 @@
+"""Split a Markdown file into linked HTML pages."""
+
 from __future__ import annotations
 
 import argparse
@@ -10,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev3"
+__version__ = "0.1.dev4"
 
 
 run_dt = datetime.now()
@@ -25,6 +27,7 @@ class AppOptions(NamedTuple):
 
 
 def html_style() -> str:
+    """Return a default style for the HTML output as a string."""
     return dedent(
         """\
         body { font-family: sans-serif; }
@@ -90,7 +93,11 @@ def html_style() -> str:
     )
 
 
-def nav_link_div(div_id: str, target: str, anchor: str):
+def nav_link_div(div_id: str, target: str, anchor: str) -> str:
+    """Return a div containing a navigation link as a string.
+
+    If no target is provided, the anchor tag is not included.
+    """
     s = f'<div id="{div_id}" class="nav-link">\n'
     if target:
         s += f'  <a href="{target}">{anchor}</a>\n'
@@ -99,22 +106,21 @@ def nav_link_div(div_id: str, target: str, anchor: str):
 
 
 def html_head(
-    title: str, pageNum: int, prevPage: str, css_link: str, add_classes: str
+    title: str, page_num: int, prev_page: str, css_link: str, add_classes: str
 ) -> str:
-    """Return the head section of an HTML file as a string. The title is used
-    as the page title. The page number is used to set the 'id' attribute of
-    the 'content' div. If a CSS link is provided, it is included in the head
-    section. If no CSS link is provided, a default style is embedded in the
-    HTML output. If additional classes are provided, they are added to the
-    'content' div.
+    """Return the head section of an HTML file as a string.
+
+    The title is used as the page title. The page number is used to set the
+    'id' attribute of the 'content' div. If a CSS link is provided, it is
+    included in the head section. If no CSS link is provided, a default style
+    is embedded in the HTML output. If additional classes are provided, they
+    are added to the 'content' div.
 
     param title: The title of the page.
-    param pageNum: The page number.
-    param prevPage: The filename of the previous page.
+    param page_num: The page number.
+    param prev_page: The filename of the previous page.
     param css_link: A link to a CSS file.
     param add_classes: Additional classes to add to the content div.
-
-    return: The head section of an HTML file as a string.
     """
     s = dedent(
         f"""\
@@ -135,36 +141,38 @@ def html_head(
 
     s += '</head>\n<body>\n<div class="container">\n\n'
 
-    s += nav_link_div("nav-prev", prevPage, "&larr;")
+    s += nav_link_div("nav-prev", prev_page, "&larr;")
 
     class_str = f"content {add_classes}" if add_classes else "content"
 
-    s += f'\n<div id="pg-{pageNum}" class="{class_str}">\n'
+    s += f'\n<div id="pg-{page_num}" class="{class_str}">\n'
 
     return s
 
 
-def script_keyboard_nav(prevPage: str, nextPage: str) -> str:
-    """Return a script to navigate to the previous or next page using the
-    left and right arrow keys. If there is no previous or next page, the
-    corresponding navigation is excluded. The script is returned as a string.
+def script_keyboard_nav(prev_page: str, next_page: str) -> str:
+    """Return a script to navigate using the left and right arrow keys.
+
+    The arrow keys move to the previous or next page. If there is no
+    previous or next page, the corresponding navigation is excluded.
+    The script is returned as a string.
     """
-    if prevPage:
+    if prev_page:
         case_prev = dedent(
             f"""\
             case "ArrowLeft":
-                window.location.href = "{prevPage}";
+                window.location.href = "{prev_page}";
                 break;
             """
         )
     else:
         case_prev = ""
 
-    if nextPage:
+    if next_page:
         case_next = dedent(
             f"""\
             case "ArrowRight":
-                window.location.href = "{nextPage}";
+                window.location.href = "{next_page}";
                 break;
             """
         )
@@ -199,10 +207,12 @@ def script_keyboard_nav(prevPage: str, nextPage: str) -> str:
 
 
 def script_nav_show_hide() -> str:
-    """Return a script to show the navigation buttons when the mouse is moved
-    and hide them after a delay. The script is returned as a string.
-    If a previous timeout exists, it is cleared before setting a new one.
-    Timeout value is in milliseconds.
+    """Return a script to show and hide navigation elements.
+
+    The script shows the navigation buttons when the mouse is moved
+    and hides them after a delay. If a previous timeout exists, it
+    is cleared before setting a new one. Timeout is in milliseconds.
+    The script is returned as a string.
     """
     return dedent(
         """\
@@ -226,21 +236,30 @@ def script_nav_show_hide() -> str:
     )
 
 
-def html_tail(prevPage: str, nextPage: str) -> str:
+def html_tail(prev_page: str, next_page: str) -> str:
+    """Return the tail section of an HTML file as a string.
+
+    The 'content' and 'container' divs are closed.
+    The previous and next page filenames are used to create navigation
+    links. The script to navigate using the keyboard is included.
+    The script to show and hide navigation elements is also included.
+    The body and html tags are closed.
+    """
     s = "</div>  <!-- content -->\n\n"
-    s += nav_link_div("nav-next", nextPage, "&rarr;")
+    s += nav_link_div("nav-next", next_page, "&rarr;")
     s += "\n</div>  <!-- container -->\n\n"
-    s += f"{script_keyboard_nav(prevPage, nextPage)}\n"
+    s += f"{script_keyboard_nav(prev_page, next_page)}\n"
     s += f"{script_nav_show_hide()}\n"
     s += "</body>\n</html>\n"
     return s
 
 
-def write_index(out_path: Path, items: list[tuple[str, str]]):
-    """Write an index file with links to the pages. The index file is named
-    'index.html' and is written to the output directory.
-    The parameter 'items' is a list of tuples containing the filename and title
-    of each page.
+def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
+    """Write an index file with links to the pages.
+
+    The file is named 'index.html' and is written to the output directory.
+    The parameter 'items' is a list of tuples containing the filename and
+    title of each page.
     """
     index_file = out_path / "index.html"
     print(f"Writing '{index_file}'")
@@ -298,10 +317,10 @@ def write_index(out_path: Path, items: list[tuple[str, str]]):
 def output_filenames(
     base_filename: str, num: int, n_pages: int
 ) -> tuple[str, str, str]:
-    """Return the filename of the current page and the filenames of the
-    previous and next pages. If there is no previous or next page, the
-    corresponding filename is an empty string. The filenames are returned as a
-    tuple of strings.
+    """Return the filenames of the current, previous, and next pages.
+
+    If there is no previous or next page, the  corresponding filename
+    is an empty string. The filenames are returned as a tuple of strings.
     """
     prev_filename = "" if num == 1 else f"{base_filename}-{num - 1:03}.html"
     next_filename = "" if num == n_pages else f"{base_filename}-{num + 1:03}.html"
@@ -310,6 +329,7 @@ def output_filenames(
 
 
 def get_args(arglist=None):
+    """Get the command-line arguments and return the parsed arguments."""
     ap = argparse.ArgumentParser(
         description="Split a Markdown file into linked HTML pages."
     )
@@ -357,6 +377,7 @@ def get_args(arglist=None):
 
 
 def get_options(arglist=None) -> AppOptions:
+    """Get the command-line arguments and return an AppOptions object."""
     args = get_args(arglist)
 
     md_path = Path(args.markdown_file)
@@ -398,10 +419,11 @@ def get_options(arglist=None) -> AppOptions:
     )
 
 
-def copy_images_subdir(opts: AppOptions):
-    """Copy the source images subdirectory, if one is specified,
-    to the output directory. Existing files in the output
-    directory are overwritten.
+def copy_images_subdir(opts: AppOptions) -> None:
+    """Copy the source images subdirectory to the output directory.
+
+    Existing files in the output directory are overwritten.
+    If no images subdirectory is specified, nothing is done.
     """
     if opts.images_subdir:
         src_path = opts.md_path.parent / opts.images_subdir
@@ -418,6 +440,7 @@ def copy_images_subdir(opts: AppOptions):
 
 def get_page_title(num: int, text: str) -> str:
     """Return the first heading in the text as the page title.
+
     If there is no heading, return a default title.
     """
     lines = text.splitlines()
@@ -429,12 +452,15 @@ def get_page_title(num: int, text: str) -> str:
 
 
 def extract_title_comments(num: int, text: str) -> tuple[str, str]:
-    """Return a tuple of the text with title comments removed and the title
-    extracted from the comments. The text is returned as a string.
-    The title is returned as a string.
+    """Extract the title from a comment in the text.
+
+    Returns a tuple of the text, with title-comments removed, and the title
+    extracted from the comments.
 
     There should only be one title comment in the text. If there is more than
     one, the last one is used.
+
+    The text and title are returned as strings.
     """
     title = ""
 
@@ -455,10 +481,14 @@ def extract_title_comments(num: int, text: str) -> tuple[str, str]:
     return "".join(out_lines), title
 
 
-def extract_class_comments(text) -> tuple[str, str]:
-    """Return a tuple of the text with class comments removed and the
-    classes extracted from the comments. The text is returned as a string.
-    The classes are returned as a string.
+def extract_class_comments(text: str) -> tuple[str, str]:
+    """Extract classes from comments in the text.
+
+    Returns a tuple of the text, with class-comments removed, and the
+    classes extracted from the comments. If there are multiple classes
+    in the comments, they are concatenated with spaces.
+
+    The text and classes are returned as strings.
     """
     classes = ""
     out_lines = []
@@ -474,6 +504,7 @@ def extract_class_comments(text) -> tuple[str, str]:
 
 
 def main(arglist=None) -> int:
+    """Split a Markdown file into linked HTML pages."""
     opts = get_options(arglist)
 
     print(f"\nReading '{opts.md_path}'")
@@ -512,17 +543,19 @@ def main(arglist=None) -> int:
 
             md, add_classes = extract_class_comments(md)
 
-            filename, prevPage, nextPage = output_filenames(
+            filename, prev_page, next_page = output_filenames(
                 opts.output_name, num, len(pages)
             )
 
             index_items.append((filename, pg_title))
 
-            html = html_head(f"{num}. {pg_title}", num, prevPage, css_link, add_classes)
+            html = html_head(
+                f"{num}. {pg_title}", num, prev_page, css_link, add_classes
+            )
 
             html += mistune.html(md)
 
-            html += html_tail(prevPage, nextPage)
+            html += html_tail(prev_page, next_page)
 
             html_file = opts.out_path / filename
             print(f"Writing '{html_file}'")

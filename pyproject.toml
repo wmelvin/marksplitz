@@ -7,16 +7,12 @@ name = "marksplitz"
 dynamic = ["version"]
 description = 'Command-line utility to split a Markdown file into linked static web pages.'
 requires-python = ">=3.8"
-
-# TODO: readme = "README.md"
-# TODO: license = {file = "LICENSE"}
-
+readme = "README.md"
+license = {file = "LICENSE.txt"}
 keywords = [ "markdown", "converter", "html", "slideshow"]
-
 authors = [
   { name = "Bill Melvin", email = "bill@billmelvin.com" },
 ]
-
 dependencies = [ "mistune" ]
 
 [project.scripts]
@@ -48,6 +44,7 @@ select = [
     "FA",   # flake8-future-annotations
     "I",    # isort
     "ISC",  # flake8-implicit-str-concat
+    "N",    # pep8-naming
     "PERF", # Perflint
     "PL",   # Pylint
     "PTH",  # flake8-use-pathlib
