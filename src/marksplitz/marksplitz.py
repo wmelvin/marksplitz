@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev4"
+__version__ = "0.1.dev5"
 
 
 run_dt = datetime.now()
@@ -44,7 +44,7 @@ def html_style() -> str:
             border: 1px solid #dde;
             border-radius: 6px;
             height: auto;
-            width: 90%;
+            width: 80%;
         }
         li { margin-top: 0.8rem; }
         blockquote {
@@ -86,9 +86,10 @@ def html_style() -> str:
         }
         #nav-prev, #nav-next { visibility: hidden; }
         a:link, a:visited {
-            color: brown;
+            color: navy;
             text-decoration: none;
         }
+        a:hover { text-decoration: underline; }
         """
     )
 
@@ -279,13 +280,10 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                         margin: 0.3rem;
                         padding: 0.3rem;
                     }
-                    .container {
-                        display: flex;
-                        justify-content: center;
-                    }
-                    .content {
-                        max-width: 900px;
-                    }
+                    .container { display: flex; justify-content: center; }
+                    .content { max-width: 900px; }
+                    a:link, a:visited { color: navy; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
                   </style>
                   <base target="_blank">
                 </head>
@@ -503,6 +501,11 @@ def extract_class_comments(text: str) -> tuple[str, str]:
     return "".join(out_lines), classes
 
 
+def add_target_blank(html: str) -> str:
+    """Add 'target="_blank"' to all external links in the HTML."""
+    return html.replace('<a href="http', '<a target="_blank" href="http')
+
+
 def main(arglist=None) -> int:
     """Split a Markdown file into linked HTML pages."""
     opts = get_options(arglist)
@@ -554,6 +557,8 @@ def main(arglist=None) -> int:
             )
 
             html += mistune.html(md)
+
+            html = add_target_blank(html)
 
             html += html_tail(prev_page, next_page)
 

@@ -20,6 +20,8 @@ def tmp_markdown_file(tmp_path) -> Path:
 
             This is a test.
 
+            [GitHub](https://github.com/wmelvin)
+
             ---
 
             ## Page 2
@@ -87,6 +89,9 @@ def test_split_markdown_file(tmp_markdown_file):
     text1 = (out_dir / "page-001.html").read_text()
     assert "<h1>Test</h1>" in text1
     assert "<p>This is a test.</p>" in text1
+
+    # assert '<a href="https://github.com/wmelvin">GitHub</a>' in text1
+    assert '<a target="_blank" href="https://github.com/wmelvin">GitHub</a>' in text1
 
     text2 = (out_dir / "page-002.html").read_text()
     assert "<h2>Page 2</h2>" in text2
