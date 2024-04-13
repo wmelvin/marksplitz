@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev5"
+__version__ = "0.1.dev6"
 
 
 run_dt = datetime.now()
@@ -107,21 +107,28 @@ def nav_link_div(div_id: str, target: str, anchor: str) -> str:
 
 
 def html_head(
-    title: str, page_num: int, prev_page: str, css_link: str, add_classes: str
+    title: str,
+    page_num: int,
+    prev_page: str,
+    css_link: str,
+    add_classes: str,
+    add_id: str,
 ) -> str:
     """Return the head section of an HTML file as a string.
 
     The title is used as the page title. The page number is used to set the
-    'id' attribute of the 'content' div. If a CSS link is provided, it is
+    'id' attribute of the 'container' div. If a CSS link is provided, it is
     included in the head section. If no CSS link is provided, a default style
     is embedded in the HTML output. If additional classes are provided, they
-    are added to the 'content' div.
+    are added to the 'content' div. If an 'add_id' is provided, it is added
+    to the 'content' div.
 
     param title: The title of the page.
     param page_num: The page number.
     param prev_page: The filename of the previous page.
     param css_link: A link to a CSS file.
     param add_classes: Additional classes to add to the content div.
+    param add_id: An id to add to the content div.
     """
     s = dedent(
         f"""\
@@ -140,13 +147,15 @@ def html_head(
 
     s += '<link rel="stylesheet" type="text/css" href="custom.css">\n'
 
-    s += '</head>\n<body>\n<div class="container">\n\n'
+    s += f'</head>\n<body>\n<div id="page-{page_num:03}" class="container">\n\n'
 
     s += nav_link_div("nav-prev", prev_page, "&larr;")
 
     class_str = f"content {add_classes}" if add_classes else "content"
 
-    s += f'\n<div id="pg-{page_num}" class="{class_str}">\n'
+    id_str = f' id="{add_id}"' if add_id else ""
+
+    s += f'\n<div{id_str} class="{class_str}">\n'
 
     return s
 
@@ -501,6 +510,27 @@ def extract_class_comments(text: str) -> tuple[str, str]:
     return "".join(out_lines), classes
 
 
+def extract_id_comments(text: str) -> tuple[str, str]:
+    """Extract an id from a comment in the text.
+
+    Returns a tuple of the text, with id-comments removed, and the id
+    extracted from the comments.
+
+    The text and id are returned as strings.
+    """
+    id_str = ""
+    out_lines = []
+    lines = text.splitlines(keepends=True)
+    for line in lines:
+        s = line.strip()
+        if s.startswith("<!-- id: "):
+            id_str = s[9:-3].strip()
+        else:
+            out_lines.append(line)
+
+    return "".join(out_lines), id_str
+
+
 def add_target_blank(html: str) -> str:
     """Add 'target="_blank"' to all external links in the HTML."""
     return html.replace('<a href="http', '<a target="_blank" href="http')
@@ -546,6 +576,8 @@ def main(arglist=None) -> int:
 
             md, add_classes = extract_class_comments(md)
 
+            md, add_id = extract_id_comments(md)
+
             filename, prev_page, next_page = output_filenames(
                 opts.output_name, num, len(pages)
             )
@@ -553,7 +585,7 @@ def main(arglist=None) -> int:
             index_items.append((filename, pg_title))
 
             html = html_head(
-                f"{num}. {pg_title}", num, prev_page, css_link, add_classes
+                f"{num}. {pg_title}", num, prev_page, css_link, add_classes, add_id
             )
 
             html += mistune.html(md)

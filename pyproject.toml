@@ -62,3 +62,6 @@ ignore = ["ISC001"]
     "S101",    # assert
     "PLR2004", # magic number
 ]
+"marksplitz.py" = [
+    "PLR0913", # too many arguments
+]

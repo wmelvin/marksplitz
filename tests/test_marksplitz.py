@@ -334,3 +334,27 @@ def test_title_comments(tmp_markdown_file):
     assert '<a href="page-001.html">Test</a>' in index_text
     assert '<a href="page-002.html">Page 2</a>' in index_text
     assert '<a href="page-003.html">This Title</a>' in index_text
+
+
+def test_id_comments(tmp_markdown_file):
+    md_file = tmp_markdown_file
+
+    md_file.write_text(md_file.read_text() + "\n<!-- id: my-id -->\n")
+
+    out_dir = md_file.parent / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir)]
+    marksplitz.main(args)
+
+    assert (out_dir / "page-002.html").exists()
+    text2 = (out_dir / "page-002.html").read_text()
+    assert 'div class="content' in text2
+    # Also check that the page id is in the 'container' div.
+    assert 'div id="page-002" class="container' in text2
+
+    assert (out_dir / "page-003.html").exists()
+    text3 = (out_dir / "page-003.html").read_text()
+    assert 'div id="my-id" class="content' in text3
+    assert "<!-- id:" not in text3
+    assert 'div id="page-003" class="container' in text3
