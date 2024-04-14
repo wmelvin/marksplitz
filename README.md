@@ -38,6 +38,13 @@ options:
 
 ## Reference
 
+### CSS
+
+- MDN Guide: [Learn to style HTML using CSS](https://developer.mozilMDNla.org/en-US/docs/Learn/CSS)
+- MDN Reference: [CSS: Cascading Style Sheets](https://developer.mozilla.org/en-US/docs/Web/CSS)
+  - [Basic concepts of flexbox](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox)
+  - [Class selectors](https://developer.mozilla.org/en-US/docs/Web/CSS/Class_selectors)
+
 ### Packages Used
 
 - [mistune](https://pypi.org/project/mistune/): Markdown parser 
