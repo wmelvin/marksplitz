@@ -40,6 +40,8 @@ options:
 
 ### CSS
 
+Customizing the generated HTML output requires using CSS.
+
 - MDN Guide: [Learn to style HTML using CSS](https://developer.mozilMDNla.org/en-US/docs/Learn/CSS)
 - MDN Reference: [CSS: Cascading Style Sheets](https://developer.mozilla.org/en-US/docs/Web/CSS)
   - [Basic concepts of flexbox](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Basic_concepts_of_flexbox)
@@ -55,4 +57,6 @@ options:
 - [uv](https://github.com/astral-sh/uv#readme) - Environment management (in place of `pip`)
 - [Ruff](https://docs.astral.sh/ruff/) - Linter and code formatter
 - [pytest](https://docs.pytest.org/en/stable/) - Testing framework
+- [build](https://build.pypa.io/en/stable/index.html) - Python packaging build frontend
+- [twine](https://twine.readthedocs.io/en/latest/) - Utility for publishing Python packages
 - [Just](https://github.com/casey/just#readme) - Command runner
