@@ -474,11 +474,17 @@ def extract_title_comments(num: int, text: str) -> tuple[str, str, int]:
     There should only be one title comment in the text. If there is more than
     one, the last one is used.
 
-    The h
+    If there is no title comment, the first Markdown heading in the text is used
+    as the title.
+
+    The headling level is based on the first Markdown heading in the text.
 
     Returns a tuple of the text, the title, and the heading level.
     """
     title = ""
+
+    # TODO: Should a title-comment also be able to set heading-level?
+    # If so, leading '#' characters could be used same as in Markdown.
 
     # Look for, and remove, a title comment.
     out_lines = []
