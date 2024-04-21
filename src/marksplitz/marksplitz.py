@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev8"
+__version__ = "0.1.dev9"
 
 
 run_dt = datetime.now()
@@ -268,8 +268,8 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
     """Write an index file with links to the pages.
 
     The file is named 'index.html' and is written to the output directory.
-    The parameter 'items' is a list of tuples containing the filename and
-    title of each page.
+    The parameter 'items' is a list of tuples containing the filename,
+    title, and heading level of each page.
     """
     index_file = out_path / "index.html"
     print(f"Writing '{index_file}'")
@@ -294,6 +294,7 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                     a:link, a:visited { color: navy; text-decoration: none; }
                     a:hover { text-decoration: underline; }
                   </style>
+                  <link rel="stylesheet" type="text/css" href="custom.css">
                   <base target="_blank">
                 </head>
                 <body>
@@ -305,8 +306,11 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
             )
         )
 
-        for filename, title in items:
-            f.write(f'  <li><a href="{filename}">{title}</a></li>\n')
+        for filename, title, level in items:
+            f.write(
+                f'  <li class="index-lev-{level}"><a href="{filename}">{title}</a>'
+                "</li>\n"
+            )
 
         f.write(
             dedent(
@@ -445,20 +449,23 @@ def copy_images_subdir(opts: AppOptions) -> None:
             shutil.copy2(src_file, dst_file)
 
 
-def get_page_title(num: int, text: str) -> str:
-    """Return the first heading in the text as the page title.
+def get_page_heading(num: int, text: str) -> tuple[str, int]:
+    """Return the first heading in the text and its heading-level.
 
-    If there is no heading, return a default title.
+    If there is no heading, return a default heading level and title.
     """
+    heading_level = 1
     lines = text.splitlines()
     for line in lines:
         s = line.strip()
         if s.startswith("#"):
-            return s.split(" ", 1)[1]
-    return f"Page {num}"
+            a = s.split(" ", 1)
+            heading_level = a[0].count("#")
+            return (a[1].strip(), heading_level)
+    return (f"Page {num}", heading_level)
 
 
-def extract_title_comments(num: int, text: str) -> tuple[str, str]:
+def extract_title_comments(num: int, text: str) -> tuple[str, str, int]:
     """Extract the title from a comment in the text.
 
     Returns a tuple of the text, with title-comments removed, and the title
@@ -467,7 +474,9 @@ def extract_title_comments(num: int, text: str) -> tuple[str, str]:
     There should only be one title comment in the text. If there is more than
     one, the last one is used.
 
-    The text and title are returned as strings.
+    The h
+
+    Returns a tuple of the text, the title, and the heading level.
     """
     title = ""
 
@@ -481,11 +490,13 @@ def extract_title_comments(num: int, text: str) -> tuple[str, str]:
         else:
             out_lines.append(line)
 
+    heading, heading_level = get_page_heading(num, text)
+
     # If there was no title comment, use the first heading as the title.
     if not title:
-        title = get_page_title(num, text)
+        title = heading
 
-    return "".join(out_lines), title
+    return "".join(out_lines), title, heading_level
 
 
 def extract_class_comments(text: str) -> tuple[str, str]:
@@ -572,7 +583,7 @@ def main(arglist=None) -> int:
         index_items = []
 
         for num, text in enumerate(pages, start=1):
-            md, pg_title = extract_title_comments(num, text)
+            md, pg_title, heading_level = extract_title_comments(num, text)
 
             md, add_classes = extract_class_comments(md)
 
@@ -582,7 +593,7 @@ def main(arglist=None) -> int:
                 opts.output_name, num, len(pages)
             )
 
-            index_items.append((filename, pg_title))
+            index_items.append((filename, pg_title, heading_level))
 
             html = html_head(
                 f"{num}. {pg_title}", num, prev_page, css_link, add_classes, add_id

@@ -358,3 +358,74 @@ def test_id_comments(tmp_markdown_file):
     assert 'div id="my-id" class="content' in text3
     assert "<!-- id:" not in text3
     assert 'div id="page-003" class="container' in text3
+
+
+def test_index_item_levels(tmp_path):
+    md_file = tmp_path / "test.md"
+    md_file.write_text(
+        dedent(
+            """
+            # Test
+
+            ## Section 1
+
+            Section 1 content.
+
+            ---
+
+            ## Section 2
+
+            Section 2 content.
+
+            ---
+
+            ### Section 2.1
+
+            Section 2.1 content.
+
+            ---
+
+            #### Section 2.1.1
+
+            Section 2.1.1 content.
+
+            ---
+
+            ### Section 2.2
+
+            Section 2.2 content.
+
+            ---
+
+            ## Section 3
+
+            Section 3 content.
+
+            """
+        )
+    )
+
+    out_dir = md_file.parent / "Output"
+    out_dir.mkdir()
+
+    args = [str(md_file), "-o", str(out_dir)]
+    marksplitz.main(args)
+
+    index_file = out_dir / "index.html"
+    assert index_file.exists()
+
+    index_text = index_file.read_text()
+    assert '<link rel="stylesheet" type="text/css" href="custom.css">' in index_text
+    assert '<li class="index-lev-1"><a href="page-001.html">Test</a>' in index_text
+    assert '<li class="index-lev-2"><a href="page-002.html">Section 2</a>' in index_text
+    assert (
+        '<li class="index-lev-3"><a href="page-003.html">Section 2.1</a>' in index_text
+    )
+    assert (
+        '<li class="index-lev-4"><a href="page-004.html">Section 2.1.1</a>'
+        in index_text
+    )
+    assert (
+        '<li class="index-lev-3"><a href="page-005.html">Section 2.2</a>' in index_text
+    )
+    assert '<li class="index-lev-2"><a href="page-006.html">Section 3</a>' in index_text
