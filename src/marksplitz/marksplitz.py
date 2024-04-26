@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev9"
+__version__ = "0.1.dev10"
 
 
 run_dt = datetime.now()
@@ -68,8 +68,9 @@ def html_style() -> str:
         }
         .content {
             border: 1px solid silver;
-            padding: 2rem;
-            width: 800px;
+            padding: 2rem 10%;
+            width: 900px;
+            max-width: 90%;
         }
         .text-center { text-align: center; }
         .nav-link {
@@ -173,6 +174,9 @@ def script_keyboard_nav(prev_page: str, next_page: str) -> str:
             case "ArrowLeft":
                 window.location.href = "{prev_page}";
                 break;
+            case "PageUp":
+                window.location.href = "{prev_page}";
+                break;
             """
         )
     else:
@@ -182,6 +186,9 @@ def script_keyboard_nav(prev_page: str, next_page: str) -> str:
         case_next = dedent(
             f"""\
             case "ArrowRight":
+                window.location.href = "{next_page}";
+                break;
+            case "PageDown":
                 window.location.href = "{next_page}";
                 break;
             """

@@ -4,6 +4,24 @@ Command-line utility to split a Markdown file into linked static web pages.
 
 > Development work in progress.
 
+## Directive Comments
+
+The following HTML comments can be placed in the source Markdown document to alter the generated HTML.
+
+`<!-- title: new-title -->` 
+
+- Replace the default HTML **title** for the page.
+
+`<!-- class: class-1 class-2 -->` 
+
+- Add one or more classes to the `content` div.
+- Use to apply styles to multiple pages via a `custom.css` file. 
+
+`<!-- id: id-value -->` 
+
+- Add `id="id-value"` to the `content` div.
+- Use to apply styles to a specific page via a `custom.css` file. 
+
 ## Command-line Usage
 
 ```
