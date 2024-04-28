@@ -48,7 +48,7 @@ def html_style() -> str:
             border: 1px solid #dde;
             border-radius: 6px;
             height: auto;
-            width: 80%;
+            max-width: 80%;
         }
 
         li { margin-top: 0.8rem; }
