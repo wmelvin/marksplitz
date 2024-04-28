@@ -15,12 +15,7 @@ The following HTML comments can be placed in the source Markdown document to alt
 `<!-- class: class-1 class-2 -->` 
 
 - Add one or more classes to the `content` div.
-- Use to apply styles to multiple pages via a `custom.css` file. 
-
-`<!-- id: id-value -->` 
-
-- Add `id="id-value"` to the `content` div.
-- Use to apply styles to a specific page via a `custom.css` file. 
+- Use to apply additional styles via a `custom.css` file. 
 
 ## Command-line Usage
 

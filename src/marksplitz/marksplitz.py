@@ -31,52 +31,64 @@ def html_style() -> str:
     return dedent(
         """\
         body { font-family: sans-serif; }
+
         h1 {
             color: #004578;
             text-align: center;
         }
+
         h2 {
             color: #002452;
             margin-top: 2rem;
         }
+
         h3 { color: #001541; }
+
         img {
             border: 1px solid #dde;
             border-radius: 6px;
             height: auto;
             width: 80%;
         }
+
         li { margin-top: 0.8rem; }
+
         blockquote {
             border: 1px solid #b0e0e6;
             border-radius: 6px;
             color: darkslategray;
             padding: 0px 4px;
         }
+
         code {
             background-color: #eee;
             padding-left: 0.3rem;
             padding-right: 0.3rem;
             font-family: monospace;
         }
-        .container {
+
+        #container {
             margin: 0.3rem;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 600px;
         }
-        .content {
+
+        #content {
             border: 1px solid silver;
             padding: 2rem 10%;
             width: 900px;
             max-width: 90%;
         }
+
         .text-center { text-align: center; }
+
         .nav-link {
             padding-top: 2rem;
             width: 3rem;
         }
+
         .nav-link a {
             border: 1px solid silver;
             border-radius: 5px;
@@ -85,7 +97,13 @@ def html_style() -> str:
             margin: 0.5rem;
             padding: 0.5rem;
         }
+
         #nav-prev, #nav-next { visibility: hidden; }
+
+        #container.show-nav #nav-prev { visibility: visible; }
+
+        #container.show-nav #nav-next { visibility: visible; }
+
         a:link, a:visited {
             color: navy;
             text-decoration: none;
@@ -113,12 +131,11 @@ def html_head(
     prev_page: str,
     css_link: str,
     add_classes: str,
-    add_id: str,
 ) -> str:
     """Return the head section of an HTML file as a string.
 
-    The title is used as the page title. The page number is used to set the
-    'id' attribute of the 'container' div. If a CSS link is provided, it is
+    The title is used as the page title. The page number is used to add a
+    class to the 'container' div. If a CSS link is provided, it is
     included in the head section. If no CSS link is provided, a default style
     is embedded in the HTML output. If additional classes are provided, they
     are added to the 'content' div. If an 'add_id' is provided, it is added
@@ -129,7 +146,6 @@ def html_head(
     param prev_page: The filename of the previous page.
     param css_link: A link to a CSS file.
     param add_classes: Additional classes to add to the content div.
-    param add_id: An id to add to the content div.
     """
     s = dedent(
         f"""\
@@ -148,15 +164,13 @@ def html_head(
 
     s += '<link rel="stylesheet" type="text/css" href="custom.css">\n'
 
-    s += f'</head>\n<body>\n<div id="page-{page_num:03}" class="container">\n\n'
+    s += f'</head>\n<body>\n<div id="container" class="page-{page_num:03}">\n\n'
 
     s += nav_link_div("nav-prev", prev_page, "&larr;")
 
-    class_str = f"content {add_classes}" if add_classes else "content"
+    class_str = f' class="{add_classes}"' if add_classes else ""
 
-    id_str = f' id="{add_id}"' if add_id else ""
-
-    s += f'\n<div{id_str} class="{class_str}">\n'
+    s += f'\n<div id="content"{class_str}>\n'
 
     return s
 
@@ -226,26 +240,25 @@ def script_keyboard_nav(prev_page: str, next_page: str) -> str:
 def script_nav_show_hide() -> str:
     """Return a script to show and hide navigation elements.
 
-    The script shows the navigation buttons when the mouse is moved
-    and hides them after a delay. If a previous timeout exists, it
-    is cleared before setting a new one. Timeout is in milliseconds.
-    The script is returned as a string.
+    The script adds a class to the 'container' div when the mouse is moved
+    and removes the class after a delay. The class is used to show or hide
+    the navigation elements.
+
+    If a previous timeout exists, it is cleared before setting a new one.
+    Timeout is in milliseconds.
     """
     return dedent(
         """\
         <script type="text/javascript">
-            var navPrev = document.getElementById('nav-prev');
-            var navNext = document.getElementById('nav-next');
+            var containerDiv = document.getElementById('container');
             var timeoutId;
             document.addEventListener('mousemove', function() {
-                navPrev.style.visibility = 'visible';
-                navNext.style.visibility = 'visible';
+                containerDiv.classList.add('show-nav');
                 if (timeoutId) {
                     clearTimeout(timeoutId);
                 }
                 timeoutId = setTimeout(function() {
-                    navPrev.style.visibility = 'hidden';
-                    navNext.style.visibility = 'hidden';
+                    containerDiv.classList.remove('show-nav');
                 }, 2000);
             });
         </script>
@@ -296,8 +309,8 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                         margin: 0.3rem;
                         padding: 0.3rem;
                     }
-                    .container { display: flex; justify-content: center; }
-                    .content { max-width: 900px; }
+                    #container { display: flex; justify-content: center; }
+                    #content { max-width: 900px; }
                     a:link, a:visited { color: navy; text-decoration: none; }
                     a:hover { text-decoration: underline; }
                   </style>
@@ -305,8 +318,8 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                   <base target="_blank">
                 </head>
                 <body>
-                <div class="container">
-                <div class="content">
+                <div id="container">
+                <div id="content">
                 <h1>Index of Pages</h1>
                 <ol>
                 """
@@ -534,27 +547,6 @@ def extract_class_comments(text: str) -> tuple[str, str]:
     return "".join(out_lines), classes
 
 
-def extract_id_comments(text: str) -> tuple[str, str]:
-    """Extract an id from a comment in the text.
-
-    Returns a tuple of the text, with id-comments removed, and the id
-    extracted from the comments.
-
-    The text and id are returned as strings.
-    """
-    id_str = ""
-    out_lines = []
-    lines = text.splitlines(keepends=True)
-    for line in lines:
-        s = line.strip()
-        if s.startswith("<!-- id: "):
-            id_str = s[9:-3].strip()
-        else:
-            out_lines.append(line)
-
-    return "".join(out_lines), id_str
-
-
 def add_target_blank(html: str) -> str:
     """Add 'target="_blank"' to all external links in the HTML."""
     return html.replace('<a href="http', '<a target="_blank" href="http')
@@ -600,8 +592,6 @@ def main(arglist=None) -> int:
 
             md, add_classes = extract_class_comments(md)
 
-            md, add_id = extract_id_comments(md)
-
             filename, prev_page, next_page = output_filenames(
                 opts.output_name, num, len(pages)
             )
@@ -609,7 +599,7 @@ def main(arglist=None) -> int:
             index_items.append((filename, pg_title, heading_level))
 
             html = html_head(
-                f"{num}. {pg_title}", num, prev_page, css_link, add_classes, add_id
+                f"{num}. {pg_title}", num, prev_page, css_link, add_classes
             )
 
             html += mistune.html(md)
