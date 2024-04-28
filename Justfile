@@ -18,7 +18,7 @@
   ruff format --check
 
 # lint and check
-@checks: lint check
+@checks: lint check test
 
 # Run ruff format
 @format:

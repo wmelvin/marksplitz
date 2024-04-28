@@ -12,7 +12,7 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev10"
+__version__ = "0.1.dev11"
 
 
 run_dt = datetime.now()
