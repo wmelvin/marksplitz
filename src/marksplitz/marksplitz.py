@@ -12,7 +12,9 @@ from typing import NamedTuple
 
 import mistune
 
-__version__ = "0.1.dev11"
+APP_NAME = "marksplitz"
+
+__version__ = "0.1.dev12"
 
 
 run_dt = datetime.now()
@@ -311,6 +313,13 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                     }
                     #container { display: flex; justify-content: center; }
                     #content { max-width: 900px; }
+                    #foot {
+                        border-top: 1px solid gray;
+                        font-family: monospace;
+                        font-size: small;
+                        margin-top: 3rem;
+                        padding-top: 1rem;
+                    }
                     a:link, a:visited { color: navy; text-decoration: none; }
                     a:hover { text-decoration: underline; }
                   </style>
@@ -332,10 +341,16 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                 "</li>\n"
             )
 
+        foot_div = (
+            f'<div id="foot">\nCreated by {APP_NAME} '
+            f"v{__version__} at {run_dt.strftime('%Y-%m-%d %H:%M')}\n"
+            "</div>\n"
+        )
         f.write(
             dedent(
-                """\
+                f"""\
                 </ol>
+                {foot_div}
                 </div>
                 </div>
                 </body>
