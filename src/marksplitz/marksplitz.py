@@ -14,7 +14,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev12"
+__version__ = "0.1.dev13"
 
 
 run_dt = datetime.now()
@@ -329,6 +329,12 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                 <body>
                 <div id="container">
                 <div id="content">
+                <p>
+                Navigate pages using Left and Right arrow, Page Up, and Page Down.</p>
+                <p>See also:
+                <a href="links.html">Extracted links</a>,
+                <a href="one-page.html">One-page version</a>
+                </p>
                 <h1>Index of Pages</h1>
                 <ol>
                 """
@@ -353,6 +359,124 @@ def write_index(out_path: Path, items: list[tuple[str, str]]) -> None:
                 {foot_div}
                 </div>
                 </div>
+                </body>
+                </html>
+                """
+            )
+        )
+
+
+def write_one_page(out_path: Path, html_all: list[str]) -> None:
+    html_file = out_path / "one-page.html"
+    print(f"Writing '{html_file}'")
+    with html_file.open("w") as f:
+        f.write(
+            dedent(
+                """\
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                  <title>One-Page</title>
+                  <style>
+                    body {
+                        font-family: sans-serif;
+                        margin: 4rem;
+                    }
+                    #foot {
+                        border-top: 1px solid gray;
+                        font-family: monospace;
+                        font-size: small;
+                        margin-top: 3rem;
+                        padding-top: 1rem;
+                    }
+                  </style>
+                </head>
+                <body>
+                """
+            )
+        )
+
+        for page in html_all:
+            for line in page.splitlines():
+                f.write(f"{line}\n")
+            f.write("\n<p>&nbsp;</p>\n<hr>\n<p>&nbsp;</p>\n")
+
+        foot_msg = (
+            f"Created by {APP_NAME} v{__version__} at "
+            f"{run_dt.strftime('%Y-%m-%d %H:%M')}"
+        )
+        f.write(
+            dedent(
+                f"""\
+                <div id="foot">{foot_msg}</div>
+                </body>
+                </html>
+                """
+            )
+        )
+
+
+def write_links_page(out_path: Path, html_all: list[str]) -> None:
+    html_file = out_path / "links.html"
+    print(f"Writing '{html_file}'")
+    with html_file.open("w") as f:
+        f.write(
+            dedent(
+                """\
+                <!DOCTYPE html>
+                <html lang='en'>
+                <head>
+                  <title>Extracted Links</title>
+                  <style>
+                    body {
+                        font-family: sans-serif;
+                        margin: 4rem;
+                    }
+                    #foot {
+                        border-top: 1px solid gray;
+                        font-family: monospace;
+                        font-size: small;
+                        margin-top: 3rem;
+                        padding-top: 1rem;
+                    }
+                  </style>
+                </head>
+                <body>
+                """
+            )
+        )
+
+        for page in html_all:
+            found_heading = False
+            is_h1 = False
+            found_link = False
+            pg = ""
+            for line in page.splitlines():
+                s = line.strip()
+
+                if not found_heading and s.lower().startswith(
+                    ("<h1>", "<h2>", "<h3>", "<h4>")
+                ):
+                    found_heading = True
+                    if s.lower().startswith("<h1>"):
+                        is_h1 = True
+                    pg += f"{line}\n"
+
+                if "<a " in s.lower():
+                    found_link = True
+                    pg += f"{line}\n"
+
+            if found_link or is_h1:
+                f.write(f"{pg}\n<p>&nbsp;</p>\n<hr>\n<p>&nbsp;</p>\n")
+
+        foot_msg = (
+            f"Created by {APP_NAME} v{__version__} at "
+            f"{run_dt.strftime('%Y-%m-%d %H:%M')}"
+        )
+        f.write(
+            dedent(
+                f"""\
+                <div id="foot">{foot_msg}</div>
                 </body>
                 </html>
                 """
@@ -602,6 +726,8 @@ def main(arglist=None) -> int:
 
         index_items = []
 
+        html_all = []
+
         for num, text in enumerate(pages, start=1):
             md, pg_title, heading_level = extract_title_comments(num, text)
 
@@ -617,9 +743,10 @@ def main(arglist=None) -> int:
                 f"{num}. {pg_title}", num, prev_page, css_link, add_classes
             )
 
-            html += mistune.html(md)
-
-            html = add_target_blank(html)
+            md_html = mistune.html(md)
+            md_html = add_target_blank(md_html)
+            html += md_html
+            html_all.append(md_html)
 
             html += html_tail(prev_page, next_page)
 
@@ -630,6 +757,8 @@ def main(arglist=None) -> int:
         copy_images_subdir(opts)
 
         write_index(opts.out_path, index_items)
+        write_one_page(opts.out_path, html_all)
+        write_links_page(opts.out_path, html_all)
 
     return 0
 
