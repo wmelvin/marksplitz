@@ -14,7 +14,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev13"
+__version__ = "0.1.dev14"
 
 
 run_dt = datetime.now()
@@ -110,6 +110,7 @@ def html_style() -> str:
             color: navy;
             text-decoration: none;
         }
+
         a:hover { text-decoration: underline; }
         """
     )
@@ -700,18 +701,19 @@ def main(arglist=None) -> int:
     src_md = opts.md_path.read_text().splitlines(keepends=True)
 
     pages = []
-    t = ""
+    page_text = ""
     for line in src_md:
         s = line.strip()
         if s == "---":
-            if t:
-                pages.append(t)
-                t = ""
+            if page_text:
+                if "<!-- no-pub -->" not in page_text:
+                    pages.append(page_text)
+                page_text = ""
         else:
-            t += line
+            page_text += line
 
-    if t:
-        pages.append(t)
+    if page_text and ("<!-- no-pub -->" not in page_text):
+        pages.append(page_text)
 
     if pages:
         if opts.css_path:

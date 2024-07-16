@@ -44,6 +44,14 @@ def tmp_markdown_file(tmp_path) -> Path:
 
             ---
 
+            ## Page X
+
+            This page should be excluded from the output.
+
+            <!-- no-pub -->
+
+            ---
+
             ## Page 3
 
             This is section 3.
