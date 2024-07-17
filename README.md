@@ -17,6 +17,10 @@ The following HTML comments can be placed in the source Markdown document to alt
 - Add one or more classes to the `content` div.
 - Use to apply additional styles via a `custom.css` file. 
 
+`<!-- no-pub -->`
+
+- Do not publish the page - exclude it from the HTML output.
+
 ## Command-line Usage
 
 ```
