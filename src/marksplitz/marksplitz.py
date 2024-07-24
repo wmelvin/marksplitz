@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import shutil
 import sys
 from datetime import datetime
@@ -14,10 +15,12 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev14"
+__version__ = "0.1.dev15"
 
 
 run_dt = datetime.now()
+
+warnings = []
 
 
 class AppOptions(NamedTuple):
@@ -25,6 +28,9 @@ class AppOptions(NamedTuple):
     out_path: Path
     output_name: str
     images_subdir: str
+    images_path: Path
+    code_subdir: str
+    code_path: Path
     css_path: Path
 
 
@@ -534,6 +540,15 @@ def get_args(arglist=None):
     )
 
     ap.add_argument(
+        "-d",
+        "--code-subdir",
+        dest="code_subdir",
+        help="Subdirectory for code files. Expected to be in the directory containing "
+        "the Markdown file. Fenced code blocks, marked with a code-file directive, "
+        "are written to this directory.",
+    )
+
+    ap.add_argument(
         "-c",
         "--css-file",
         dest="css_file",
@@ -572,10 +587,20 @@ def get_options(arglist=None) -> AppOptions:
         out_path.mkdir()
 
     if args.images_subdir:
-        images_subdir = md_path.parent / args.images_subdir
-        if not images_subdir.exists():
-            sys.stderr.write(f"\nDirectory not found: {images_subdir}\n")
-            sys.exit(1)
+        images_path = md_path.parent / args.images_subdir
+        if not images_path.exists():
+            print(f"Creating images subdirectory: {images_path}")
+            images_path.mkdir()
+    else:
+        images_path = None
+
+    if args.code_subdir:
+        code_path = md_path.parent / args.code_subdir
+        if not code_path.exists():
+            print(f"Creating code subdirectory: {code_path}")
+            code_path.mkdir()
+    else:
+        code_path = None
 
     output_name = args.output_name if args.output_name else "page"
 
@@ -586,6 +611,9 @@ def get_options(arglist=None) -> AppOptions:
         out_path=out_path,
         output_name=output_name,
         images_subdir=args.images_subdir,
+        images_path=images_path,
+        code_subdir=args.code_subdir,
+        code_path=code_path,
         css_path=css_path,
     )
 
@@ -597,11 +625,10 @@ def copy_images_subdir(opts: AppOptions) -> None:
     If no images subdirectory is specified, nothing is done.
     """
     if opts.images_subdir:
-        src_path = opts.md_path.parent / opts.images_subdir
         dst_path = opts.out_path / opts.images_subdir
         if not dst_path.exists():
             dst_path.mkdir()
-        for src_file in src_path.iterdir():
+        for src_file in opts.images_path.iterdir():
             if not src_file.is_file():
                 continue
             dst_file = dst_path / src_file.name
@@ -687,9 +714,107 @@ def extract_class_comments(text: str) -> tuple[str, str]:
     return "".join(out_lines), classes
 
 
+def delete_obsolete_image_file(old_code_file: Path, opts: AppOptions) -> None:
+    img_path = opts.images_path / f"codeimg_{old_code_file.with_suffix('.png').name}"
+    if img_path.exists():
+        print(f"Delete obsolete '{img_path.name}'")
+        img_path.unlink()
+
+
+def delete_obsolete_code_file(code_file: Path, opts: AppOptions) -> None:
+    # Get the first part of the file name up to the hash.
+    s = code_file.name.rsplit(".", 2)[0]
+
+    # Delete any of the same code-file with a different hash.
+    files = list(code_file.parent.glob(f"{s}*"))
+    for file in files:
+        if file.name == code_file.name:
+            continue
+        print(f"Delete obsolete '{file.name}'")
+        file.unlink()
+        delete_obsolete_image_file(file, opts)
+
+
+def extract_code_files(text: str, opts: AppOptions) -> str:
+    """Extract code blocks from the text and write them to files
+    based on the file names specified in a HTML comment preceeding
+    the fenced code block.
+
+    Returns the text with code-file comments removed.
+
+    The text is returned as a string.
+    """
+    if not (opts.images_path and opts.code_path):
+        return text
+
+    out_lines = []
+    code_filename = ""
+    code_text = ""
+    in_code_block = False
+    lines = text.splitlines(keepends=True)
+    for line in lines:
+        s = line.strip()
+
+        if s.startswith("<!-- code-file: "):
+            code_filename = s[15:-3].strip()
+        elif s.startswith("```"):
+            if in_code_block and code_text and code_filename:
+                # Add a hash of the code to the filename so corresponding
+                # code-image file is invalidated if the code changes.
+                sha1 = hashlib.sha1(usedforsecurity=False)
+                sha1.update(code_text.encode("utf-8"))
+                # The first 8 characters should be enough for this purpose.
+                text_hash = sha1.hexdigest()[:8]
+
+                code_file = Path(code_filename)
+                code_file = (
+                    opts.code_path / f"{code_file.stem}.{text_hash}{code_file.suffix}"
+                )
+
+                delete_obsolete_code_file(code_file, opts)
+
+                # Because the file name includes a hash of the text,
+                # the file is only written if the code has changed.
+                if code_file.exists():
+                    print(f"Not changed: '{code_file}'")
+                else:
+                    print(f"Writing code '{code_file}'")
+                    code_file.write_text(code_text)
+
+                code_image = opts.images_path / f"codeimg_{code_file.stem}.png"
+                if code_image.exists():
+                    img = Path(opts.images_subdir) / code_image.name
+                    out_lines.append(f"\n![{code_filename}]({img})\n")
+                else:
+                    warnings.append(f"WARNING: No code image for '{code_file.name}'")
+                    out_lines.append(
+                        '\n<p style="color: red;">'
+                        f"No code image for '{code_file.name}'"
+                        "</p>\n"
+                    )
+
+                code_filename = ""
+                code_text = ""
+            in_code_block = not in_code_block
+        elif in_code_block:
+            code_text += line
+        else:
+            out_lines.append(line)
+
+    return "".join(out_lines)
+
+
 def add_target_blank(html: str) -> str:
     """Add 'target="_blank"' to all external links in the HTML."""
     return html.replace('<a href="http', '<a target="_blank" href="http')
+
+
+def show_warnings():
+    if warnings:
+        print("")
+        for w in warnings:
+            print(w)
+    print("")
 
 
 def main(arglist=None) -> int:
@@ -735,6 +860,8 @@ def main(arglist=None) -> int:
 
             md, add_classes = extract_class_comments(md)
 
+            md = extract_code_files(md, opts)
+
             filename, prev_page, next_page = output_filenames(
                 opts.output_name, num, len(pages)
             )
@@ -761,6 +888,7 @@ def main(arglist=None) -> int:
         write_index(opts.out_path, index_items)
         write_one_page(opts.out_path, html_all)
         write_links_page(opts.out_path, html_all)
+        show_warnings()
 
     return 0
 

@@ -31,3 +31,7 @@
 # Run pytest
 @test:
   pytest
+
+# Run marksplitz.py to write help text to temp.txt
+@help:
+  python3 src/marksplitz/marksplitz.py -h > temp.txt

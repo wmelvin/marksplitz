@@ -17,6 +17,11 @@ The following HTML comments can be placed in the source Markdown document to alt
 - Add one or more classes to the `content` div.
 - Use to apply additional styles via a `custom.css` file. 
 
+`<!-- code-file: filename.ext -->`
+
+- Place before a [fenced code block](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#fenced-code-blocks) to write the code to a file with the given *filename.ext*.
+- Requires that the `--code-subdir` option used to specify the destination.
+
 `<!-- no-pub -->`
 
 - Do not publish the page - exclude it from the HTML output.
@@ -25,8 +30,8 @@ The following HTML comments can be placed in the source Markdown document to alt
 
 ```
 usage: marksplitz [-h] [-o OUTPUT_DIR] [-n OUTPUT_NAME] [-i IMAGES_SUBDIR]
-                     [-c CSS_FILE]
-                     markdown_file
+                  [-d CODE_SUBDIR] [-c CSS_FILE]
+                  markdown_file
 
 Split a Markdown file into linked HTML pages.
 
@@ -44,6 +49,11 @@ options:
                         directory containing the Markdown file. Contents are
                         copied to a subdirectory by the same name in the
                         output directory.
+  -d CODE_SUBDIR, --code-subdir CODE_SUBDIR
+                        Subdirectory for code files. Expected to be in the
+                        directory containing the Markdown file. Fenced code
+                        blocks, marked with a code-file directive, are written
+                        to this directory.
   -c CSS_FILE, --css-file CSS_FILE
                         Optional name of a CSS file to include in the same
                         location as the HTML output. If a CSS file is not
