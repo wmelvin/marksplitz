@@ -20,7 +20,7 @@ The following HTML comments can be placed in the source Markdown document to alt
 `<!-- code-file: filename.ext -->`
 
 - Place before a [fenced code block](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks#fenced-code-blocks) to write the code to a file with the given *filename.ext*.
-- Requires that the `--code-subdir` option used to specify the destination.
+- Requires that the `--code-subdir` option is used to specify the destination.
 
 `<!-- no-pub -->`
 

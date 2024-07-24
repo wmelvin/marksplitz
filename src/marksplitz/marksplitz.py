@@ -15,7 +15,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev15"
+__version__ = "0.1.dev16"
 
 
 run_dt = datetime.now()
@@ -744,7 +744,7 @@ def extract_code_files(text: str, opts: AppOptions) -> str:
 
     The text is returned as a string.
     """
-    if not (opts.images_path and opts.code_path):
+    if not ("<!-- code-file:" in text and opts.images_path and opts.code_path):
         return text
 
     out_lines = []
@@ -755,7 +755,7 @@ def extract_code_files(text: str, opts: AppOptions) -> str:
     for line in lines:
         s = line.strip()
 
-        if s.startswith("<!-- code-file: "):
+        if s.startswith("<!-- code-file:"):
             code_filename = s[15:-3].strip()
         elif s.startswith("```"):
             if in_code_block and code_text and code_filename:
