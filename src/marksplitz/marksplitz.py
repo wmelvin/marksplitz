@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import shutil
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from textwrap import dedent, indent
@@ -15,7 +16,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev16"
+__version__ = "0.1.dev17"
 
 
 run_dt = datetime.now()
@@ -32,6 +33,7 @@ class AppOptions(NamedTuple):
     code_subdir: str
     code_path: Path
     css_path: Path
+    img_delay: int = 0
 
 
 def html_style() -> str:
@@ -549,6 +551,14 @@ def get_args(arglist=None):
     )
 
     ap.add_argument(
+        "--img-delay",
+        dest="img_delay",
+        type=int,
+        default=0,
+        help="Delay in seconds to wait for a code-file image to be created.",
+    )
+
+    ap.add_argument(
         "-c",
         "--css-file",
         dest="css_file",
@@ -615,6 +625,7 @@ def get_options(arglist=None) -> AppOptions:
         code_subdir=args.code_subdir,
         code_path=code_path,
         css_path=css_path,
+        img_delay=args.img_delay,
     )
 
 
@@ -782,6 +793,11 @@ def extract_code_files(text: str, opts: AppOptions) -> str:
                     code_file.write_text(code_text)
 
                 code_image = opts.images_path / f"codeimg_{code_file.stem}.png"
+
+                if opts.img_delay and not code_image.exists():
+                    print(f"Waiting {opts.img_delay} seconds for '{code_image.name}'")
+                    time.sleep(opts.img_delay)
+
                 if code_image.exists():
                     img = Path(opts.images_subdir) / code_image.name
                     out_lines.append(f"\n![{code_filename}]({img})\n")
