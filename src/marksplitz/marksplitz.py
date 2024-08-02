@@ -16,7 +16,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev18"
+__version__ = "0.1.dev19"
 
 
 run_dt = datetime.now()
@@ -249,9 +249,9 @@ def script_keyboard_nav(prev_page: str, next_page: str) -> str:
 
 
 def script_swipe_nav(prev_page: str, next_page: str) -> str:
-    """ Return a script to navigate using swipe gestures.
+    """Return a script to navigate using swipe gestures.
 
-    The script adds event listeners for pointerdown and pointerup events.
+    The script adds event listeners for touchstart and touchend events.
     The difference in X and Y coordinates is used to determine the direction
     of the swipe.
 
@@ -262,10 +262,10 @@ def script_swipe_nav(prev_page: str, next_page: str) -> str:
     s = dedent(
         f"""\
         <script type="text/javascript">
-            let downX = 0;
-            let downY = 0;
-            let upX = 0;
-            let upY = 0;
+            let startX = 0;
+            let startY = 0;
+            let endX = 0;
+            let endY = 0;
             let prevPage = '{prev_page}';
             let nextPage = '{next_page}';
             const MIN_SWIPE = 30;
@@ -274,35 +274,35 @@ def script_swipe_nav(prev_page: str, next_page: str) -> str:
     )
     s += dedent(
         """\
-            document.addEventListener('pointerdown', (event) => {
-                downX = event.clientX;
-                downY = event.clientY;
+            document.addEventListener('touchstart', (event) => {
+                startX = event.changedTouches[0].screenX;
+                startY = event.changedTouches[0].screenY;
             }, false);
 
-            document.addEventListener('pointerup', (event) => {
-                upX = event.clientX;
-                upY = event.clientY;
+            document.addEventListener('touchend', (event) => {
+                endX = event.changedTouches[0].screenX;
+                endY = event.changedTouches[0].screenY;
                 handleSwipe();
             }, false);
 
             function handleSwipe() {
-                let diffX = upX - downX;
-                let diffY = upY - downY;
+                let diffX = endX - startX;
+                let diffY = endY - startY;
 
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > MIN_SWIPE) {
                         if (diffX > 0) {  // Swipe right
-                            if (nextPage) { window.location.href = nextPage; }
-                        } else {  // Swipe left
                             if (prevPage) { window.location.href = prevPage; }
+                        } else {  // Swipe left
+                            if (nextPage) { window.location.href = nextPage; }
                         }
                     }
                 } else {
                     if (Math.abs(diffY) > MIN_SWIPE) {
                         if (diffY > 0) {  // Swipe down
-                            if (nextPage) { window.location.href = nextPage; }
-                        } else {  // Swipe up
                             if (prevPage) { window.location.href = prevPage; }
+                        } else {  // Swipe up
+                            if (nextPage) { window.location.href = nextPage; }
                         }
                     }
                 }
@@ -311,8 +311,6 @@ def script_swipe_nav(prev_page: str, next_page: str) -> str:
         """
     )
     return s
-
-
 
 
 def script_nav_show_hide() -> str:
