@@ -16,7 +16,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev17"
+__version__ = "0.1.dev18"
 
 
 run_dt = datetime.now()
@@ -248,6 +248,73 @@ def script_keyboard_nav(prev_page: str, next_page: str) -> str:
     return s
 
 
+def script_swipe_nav(prev_page: str, next_page: str) -> str:
+    """ Return a script to navigate using swipe gestures.
+
+    The script adds event listeners for pointerdown and pointerup events.
+    The difference in X and Y coordinates is used to determine the direction
+    of the swipe.
+
+    The previous and next page filenames are used to create navigation links.
+
+    The script is returned as a string.
+    """
+    s = dedent(
+        f"""\
+        <script type="text/javascript">
+            let downX = 0;
+            let downY = 0;
+            let upX = 0;
+            let upY = 0;
+            let prevPage = '{prev_page}';
+            let nextPage = '{next_page}';
+            const MIN_SWIPE = 30;
+
+        """
+    )
+    s += dedent(
+        """\
+            document.addEventListener('pointerdown', (event) => {
+                downX = event.clientX;
+                downY = event.clientY;
+            }, false);
+
+            document.addEventListener('pointerup', (event) => {
+                upX = event.clientX;
+                upY = event.clientY;
+                handleSwipe();
+            }, false);
+
+            function handleSwipe() {
+                let diffX = upX - downX;
+                let diffY = upY - downY;
+
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (Math.abs(diffX) > MIN_SWIPE) {
+                        if (diffX > 0) {  // Swipe right
+                            if (nextPage) { window.location.href = nextPage; }
+                        } else {  // Swipe left
+                            if (prevPage) { window.location.href = prevPage; }
+                        }
+                    }
+                } else {
+                    if (Math.abs(diffY) > MIN_SWIPE) {
+                        if (diffY > 0) {  // Swipe down
+                            if (nextPage) { window.location.href = nextPage; }
+                        } else {  // Swipe up
+                            if (prevPage) { window.location.href = prevPage; }
+                        }
+                    }
+                }
+            }
+        </script>
+        """
+    )
+    return s
+
+
+
+
 def script_nav_show_hide() -> str:
     """Return a script to show and hide navigation elements.
 
@@ -290,6 +357,7 @@ def html_tail(prev_page: str, next_page: str) -> str:
     s += nav_link_div("nav-next", next_page, "&rarr;")
     s += "\n</div>  <!-- container -->\n\n"
     s += f"{script_keyboard_nav(prev_page, next_page)}\n"
+    s += f"{script_swipe_nav(prev_page, next_page)}\n"
     s += f"{script_nav_show_hide()}\n"
     s += "</body>\n</html>\n"
     return s
