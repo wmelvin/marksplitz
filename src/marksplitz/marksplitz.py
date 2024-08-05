@@ -9,14 +9,14 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from textwrap import dedent, indent
+from textwrap import dedent
 from typing import NamedTuple
 
 import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev19"
+__version__ = "0.1.dev20"
 
 
 run_dt = datetime.now()
@@ -186,74 +186,17 @@ def html_head(
     return s
 
 
-def script_keyboard_nav(prev_page: str, next_page: str) -> str:
-    """Return a script to navigate using the left and right arrow keys.
+def script_nav_keyboard_or_swipe(prev_page: str, next_page: str) -> str:
+    """Return a script to navigate between pages.
 
-    The arrow keys move to the previous or next page. If there is no
-    previous or next page, the corresponding navigation is excluded.
-    The script is returned as a string.
-    """
-    if prev_page:
-        case_prev = dedent(
-            f"""\
-            case "ArrowLeft":
-                window.location.href = "{prev_page}";
-                break;
-            case "PageUp":
-                window.location.href = "{prev_page}";
-                break;
-            """
-        )
-    else:
-        case_prev = ""
+    The script provides two methods for navigating to the next or previous page.
 
-    if next_page:
-        case_next = dedent(
-            f"""\
-            case "ArrowRight":
-                window.location.href = "{next_page}";
-                break;
-            case "PageDown":
-                window.location.href = "{next_page}";
-                break;
-            """
-        )
-    else:
-        case_next = ""
+    The first method listens for a 'keydown' event to navigate using
+    the left and right arrow keys and the Page Up and Page Down keys.
 
-    s = dedent(
-        """\
-        <script type="text/javascript">
-            document.addEventListener('keydown', function(event) {
-                const key = event.key;
-                switch (key) {
-        """
-    )
-
-    if case_prev:
-        s += indent(case_prev, " " * 12)
-
-    if case_next:
-        s += indent(case_next, " " * 12)
-
-    s += dedent(
-        """\
-                    default:
-                        break;
-                }
-            });
-        </script>
-        """
-    )
-    return s
-
-
-def script_swipe_nav(prev_page: str, next_page: str) -> str:
-    """Return a script to navigate using swipe gestures.
-
-    The script adds event listeners for touchstart and touchend events.
-    The difference in X and Y coordinates is used to determine the direction
-    of the swipe.
+    The second method adds event listeners for touchstart and touchend
+    events to navigate using swipe gestures. The difference in X and Y
+    coordinates is used to determine the direction of the swipe.
 
     The previous and next page filenames are used to create navigation links.
 
@@ -274,6 +217,26 @@ def script_swipe_nav(prev_page: str, next_page: str) -> str:
     )
     s += dedent(
         """\
+            document.addEventListener('keydown', function(event) {
+                const key = event.key;
+                switch (key) {
+                    case "ArrowLeft":
+                        if (prevPage) { window.location.href = prevPage; }
+                        break;
+                    case "PageUp":
+                        if (prevPage) { window.location.href = prevPage; }
+                        break;
+                    case "ArrowRight":
+                        if (nextPage) { window.location.href = nextPage; }
+                        break;
+                    case "PageDown":
+                        if (nextPage) { window.location.href = nextPage; }
+                        break;
+                    default:
+                        break;
+                }
+            });
+
             document.addEventListener('touchstart', (event) => {
                 startX = event.changedTouches[0].screenX;
                 startY = event.changedTouches[0].screenY;
@@ -354,8 +317,7 @@ def html_tail(prev_page: str, next_page: str) -> str:
     s = "</div>  <!-- content -->\n\n"
     s += nav_link_div("nav-next", next_page, "&rarr;")
     s += "\n</div>  <!-- container -->\n\n"
-    s += f"{script_keyboard_nav(prev_page, next_page)}\n"
-    s += f"{script_swipe_nav(prev_page, next_page)}\n"
+    s += f"{script_nav_keyboard_or_swipe(prev_page, next_page)}\n"
     s += f"{script_nav_show_hide()}\n"
     s += "</body>\n</html>\n"
     return s
