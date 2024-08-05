@@ -191,5 +191,5 @@ def test_markdown_file_with_code_subdir_and_image(tmp_markdown_file_with_code):
     assert cb not in pg3
 
     # The code block should be replaced with an image tag.
-    im = '<img src="images/codeimg_hello.49c18460.png" alt="hello.py"'
+    im = f'<img src="images/codeimg_hello.{code_hash}.png" alt="hello.py"'
     assert im in pg3
