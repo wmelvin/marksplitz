@@ -8,14 +8,14 @@ Command-line utility to split a Markdown file into linked static web pages.
 
 The following HTML comments can be placed in the source Markdown document to alter the generated HTML.
 
-`<!-- title: new-title -->` 
+`<!-- title: new-title -->`
 
 - Replace the default HTML **title** for the page.
 
-`<!-- class: class-1 class-2 -->` 
+`<!-- class: class-1 class-2 -->`
 
 - Add one or more classes to the `content` div.
-- Use to apply additional styles via a `custom.css` file. 
+- Use to apply additional styles via a `custom.css` file.
 
 `<!-- code-file: filename.ext -->`
 
@@ -29,8 +29,9 @@ The following HTML comments can be placed in the source Markdown document to alt
 ## Command-line Usage
 
 ```
+
 usage: marksplitz [-h] [-o OUTPUT_DIR] [-n OUTPUT_NAME] [-i IMAGES_SUBDIR]
-                  [-d CODE_SUBDIR] [-c CSS_FILE]
+                  [-d CODE_SUBDIR] [--img-delay IMG_DELAY] [-c CSS_FILE]
                   markdown_file
 
 Split a Markdown file into linked HTML pages.
@@ -40,20 +41,29 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
+
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         Path to the output directory.
+
   -n OUTPUT_NAME, --output-name OUTPUT_NAME
                         Base name for the output HTML files.
+
   -i IMAGES_SUBDIR, --images-subdir IMAGES_SUBDIR
                         Subdirectory for images. Expected to be in the
                         directory containing the Markdown file. Contents are
                         copied to a subdirectory by the same name in the
                         output directory.
+
   -d CODE_SUBDIR, --code-subdir CODE_SUBDIR
                         Subdirectory for code files. Expected to be in the
                         directory containing the Markdown file. Fenced code
                         blocks, marked with a code-file directive, are written
                         to this directory.
+
+  --img-delay IMG_DELAY
+                        Delay in seconds to wait for a code-file image to be
+                        created.
+
   -c CSS_FILE, --css-file CSS_FILE
                         Optional name of a CSS file to include in the same
                         location as the HTML output. If a CSS file is not
@@ -61,6 +71,7 @@ options:
                         output. If a CSS file is specified, the default style
                         is not included.If the specified CSS file does not
                         exist, it is created with the default style.
+
 ```
 
 ## Reference
@@ -76,7 +87,7 @@ Customizing the generated HTML output requires using CSS.
 
 ### Packages Used
 
-- [mistune](https://pypi.org/project/mistune/): Markdown parser 
+- [mistune](https://pypi.org/project/mistune/): Markdown parser
     - [docs](https://mistune.lepture.com/en/latest/)
 
 ### Project Tools
