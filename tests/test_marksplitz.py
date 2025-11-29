@@ -3,6 +3,7 @@ from textwrap import dedent
 
 import mistune
 import pytest
+
 from marksplitz import marksplitz
 
 
@@ -165,7 +166,7 @@ def test_output_dir_option(tmp_path, outdir_option):
 def test_copy_images_subdir(tmp_path, images_option):
     # Create a temporary directory with a Markdown file and an images subdirectory.
     md_file = tmp_path / "test.md"
-    md_file.write_text("# Test\n" "This is a test.\n" "![Image](images/image.png)\n")
+    md_file.write_text("# Test\nThis is a test.\n![Image](images/image.png)\n")
 
     images_dir = tmp_path / "images"
     images_dir.mkdir()
@@ -187,7 +188,7 @@ def test_copy_images_subdir(tmp_path, images_option):
 
 def test_copy_images_with_existing_file(tmp_path):
     md_file = tmp_path / "test.md"
-    md_file.write_text("# Test\n" "This is a test.\n" "![Image](images/image.png)\n")
+    md_file.write_text("# Test\nThis is a test.\n![Image](images/image.png)\n")
 
     images_dir = tmp_path / "images"
     images_dir.mkdir()
@@ -210,7 +211,7 @@ def test_copy_images_with_existing_file(tmp_path):
 def test_css_file_option(tmp_path, css_option):
     # Create a temporary directory with a Markdown file and a CSS file.
     md_file = tmp_path / "test.md"
-    md_file.write_text("# Test\n" "This is a test.\n")
+    md_file.write_text("# Test\nThis is a test.\n")
 
     # Create a temporary directory for the output.
     out_dir = tmp_path / "Output"

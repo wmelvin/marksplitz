@@ -4,9 +4,7 @@
 # Remove dist and egg-info
 @clean:
   -rm dist/*
-  -rmdir dist
   -rm src/marksplitz.egg-info/*
-  -rmdir src/marksplitz.egg-info
 
 # The following commands require the virtual environment is activated:
 

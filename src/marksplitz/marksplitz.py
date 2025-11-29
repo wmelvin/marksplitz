@@ -16,7 +16,7 @@ import mistune
 
 APP_NAME = "marksplitz"
 
-__version__ = "0.1.dev20"
+__version__ = "0.1.dev21"
 
 
 run_dt = datetime.now()
