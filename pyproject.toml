@@ -6,14 +6,16 @@ build-backend = "setuptools.build_meta"
 name = "marksplitz"
 dynamic = ["version"]
 description = 'Command-line utility to split a Markdown file into linked static web pages.'
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
-license = {file = "LICENSE.txt"}
+license = "MIT"
 keywords = [ "markdown", "converter", "html", "slideshow"]
 authors = [
   { name = "Bill Melvin", email = "bill@billmelvin.com" },
 ]
-dependencies = [ "mistune" ]
+dependencies = [
+    "mistune>=3.4.0",
+]
 
 [project.scripts]
 marksplitz = "marksplitz.marksplitz:main"
@@ -68,8 +70,8 @@ ignore = ["ISC001"]
 
 [dependency-groups]
 dev = [
-    "build>=1.3.0",
-    "pytest>=9.0.1",
-    "ruff>=0.14.7",
-    "twine>=6.2.0",
+    "build>=1.6.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.4",
+    "twine>=7.0.0",
 ]
