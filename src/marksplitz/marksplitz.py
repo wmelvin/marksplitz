@@ -686,6 +686,9 @@ def get_page_heading(num: int, text: str) -> tuple[str, int]:
         s = line.strip()
         if s.startswith("#"):
             a = s.split(" ", 1)
+            if len(a) < 2:
+                # Not a heading (e.g. a "#hashtag" line with no space).
+                continue
             heading_level = a[0].count("#")
             return (a[1].strip(), heading_level)
     return (f"Page {num}", heading_level)
