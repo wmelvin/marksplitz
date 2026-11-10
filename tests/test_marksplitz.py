@@ -414,3 +414,13 @@ def test_index_item_levels(tmp_path):
         '<li class="index-lev-3"><a href="page-005.html">Section 2.2</a>' in index_text
     )
     assert '<li class="index-lev-2"><a href="page-006.html">Section 3</a>' in index_text
+
+
+def test_page_heading_without_space():
+    title, level = marksplitz.get_page_heading(1, "#hashtag")
+    assert (title, level) == ("Page 1", 1)
+
+
+def test_page_heading_skips_spaceless_tag_line():
+    title, level = marksplitz.get_page_heading(2, "#hashtag\n\n## Real heading")
+    assert (title, level) == ("Real heading", 2)
